@@ -1,0 +1,200 @@
+
+/* PatientDashboard refinements */
+
+.patient-app {
+  min-width: 0;
+}
+
+.patient-main,
+.patient-content {
+  min-width: 0;
+}
+
+.patient-welcome,
+.patient-panel,
+.patient-stat-card {
+  scroll-margin-top: 100px;
+}
+
+.patient-nav-item {
+  cursor: pointer;
+}
+
+.patient-nav-item:focus-visible,
+.patient-icon-button:focus-visible,
+.patient-menu-toggle:focus-visible,
+.patient-close-menu:focus-visible,
+.patient-logout:focus-visible,
+.patient-exercise-check:focus-visible,
+.patient-full-width-button:focus-visible,
+.patient-appointment-action:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 3px;
+}
+
+.patient-search input {
+  min-width: 0;
+}
+
+.patient-notification-wrap {
+  position: relative;
+}
+
+.patient-notification-popover {
+  z-index: 100;
+  max-width: min(320px, calc(100vw - 32px));
+}
+
+.patient-appointment-card,
+.patient-exercise-item {
+  min-width: 0;
+}
+
+.patient-doctor-info,
+.patient-exercise-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.patient-welcome-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-exercise-check {
+  cursor: pointer;
+}
+
+.patient-mobile-overlay {
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .patient-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .patient-dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-topbar {
+    gap: 10px;
+  }
+
+  .patient-breadcrumb {
+    min-width: 0;
+  }
+
+  .patient-topbar-actions {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .patient-search {
+    max-width: 220px;
+    min-width: 0;
+  }
+
+  .patient-header-user-text {
+    display: none;
+  }
+
+  .patient-welcome {
+    gap: 24px;
+  }
+
+  .patient-welcome-art {
+    max-width: 100%;
+  }
+
+  .patient-appointment-card {
+    flex-wrap: wrap;
+  }
+
+  .patient-appointment-action {
+    margin-left: auto;
+  }
+
+  .patient-book-banner {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .patient-book-banner > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .patient-exercise-item {
+    flex-wrap: wrap;
+  }
+
+  .patient-exercise-info {
+    flex: 1 1 180px;
+  }
+
+  .patient-exercise-check {
+    margin-left: auto;
+  }
+
+  .patient-exercise-footer {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .patient-footer-progress {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .patient-stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .patient-search {
+    max-width: 145px;
+  }
+
+  .patient-breadcrumb > span {
+    display: none;
+  }
+
+  .patient-welcome h1 {
+    font-size: clamp(25px, 7vw, 34px);
+  }
+
+  .patient-panel-heading {
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .patient-appointment-meta {
+    flex-wrap: wrap;
+  }
+
+  .patient-progress-score {
+    flex-wrap: wrap;
+  }
+
+  .patient-page-footer {
+    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patient-app *,
+  .patient-app *::before,
+  .patient-app *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

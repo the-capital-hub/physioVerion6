@@ -1,0 +1,468 @@
+
+/* =========================================
+   REHABICS V6 — NAVBAR
+   Alpine Horizon Theme
+   ========================================= */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.navbar-container {
+  width: min(calc(100% - 48px), var(--container-width));
+  min-height: var(--navbar-height);
+  margin-inline: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+/* Brand */
+
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  flex-shrink: 0;
+}
+
+.navbar-logo {
+  width: 45px;
+  height: 45px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  border-radius: 14px;
+
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.2);
+
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition);
+}
+
+.navbar-brand:hover .navbar-logo {
+  transform: rotate(-5deg) scale(1.04);
+  box-shadow: 0 9px 22px rgba(99, 102, 241, 0.3);
+}
+
+.navbar-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.navbar-brand-name {
+  color: var(--text-primary);
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -1.3px;
+}
+
+.navbar-brand-tagline {
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 1.05px;
+}
+
+/* Desktop Links */
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.navbar-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  padding: 10px 12px;
+
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  transition:
+    color var(--transition),
+    background var(--transition);
+}
+
+.navbar-link::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 2px;
+
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #6366f1, #22d3ee);
+
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition);
+}
+
+.navbar-link:hover,
+.navbar-link.active {
+  color: var(--primary);
+}
+
+.navbar-link.active::after,
+.navbar-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Desktop Actions */
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  flex-shrink: 0;
+}
+
+.navbar-login {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  transition: color var(--transition);
+}
+
+.navbar-login:hover {
+  color: var(--primary);
+}
+
+/* Shared Theme Toggle */
+
+.navbar-theme-toggle {
+  width: 39px;
+  height: 39px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  transition:
+    color var(--transition),
+    background var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
+}
+
+.navbar-theme-toggle:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+  border-color: var(--primary);
+  transform: rotate(8deg);
+}
+
+/* CTA */
+
+.navbar-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 43px;
+  padding: 11px 16px;
+
+  color: #ffffff;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+
+  font-size: 12.5px;
+  font-weight: 800;
+  white-space: nowrap;
+
+  box-shadow: 0 5px 14px rgba(99, 102, 241, 0.18);
+
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.navbar-cta:hover {
+  color: #ffffff;
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.28);
+  transform: translateY(-2px);
+}
+
+.navbar-cta svg {
+  transition: transform var(--transition);
+}
+
+.navbar-cta:hover svg {
+  transform: translate(2px, -2px);
+}
+
+/* Mobile Controls */
+
+.navbar-mobile-actions {
+  display: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.navbar-menu-toggle {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  transition:
+    color var(--transition),
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.navbar-menu-toggle:hover {
+  color: var(--primary);
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+/* Mobile Menu */
+
+.navbar-mobile-menu {
+  display: none;
+  padding: 16px 24px 24px;
+
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+.navbar-mobile-links {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.navbar-mobile-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 13px 15px;
+
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  transition:
+    color var(--transition),
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.navbar-mobile-link:hover,
+.navbar-mobile-link.active {
+  color: var(--primary);
+  background: var(--primary-light);
+  border-color: rgba(99, 102, 241, 0.12);
+}
+
+.navbar-mobile-arrow {
+  transform: rotate(-90deg);
+  opacity: 0.6;
+}
+
+.navbar-mobile-auth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 12px;
+
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.navbar-mobile-login {
+  min-height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+.navbar-mobile-login:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.navbar-mobile-cta {
+  width: 100%;
+  min-height: 44px;
+}
+
+.navbar-mobile-note {
+  margin-top: 20px;
+  margin-bottom: 0;
+
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .navbar-container {
+    gap: 16px;
+  }
+
+  .navbar-links {
+    gap: 0;
+  }
+
+  .navbar-link {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+
+  .navbar-link::after {
+    left: 8px;
+    right: 8px;
+  }
+
+  .navbar-actions {
+    gap: 11px;
+  }
+
+  .navbar-brand-name {
+    font-size: 23px;
+  }
+}
+
+@media (max-width: 900px) {
+  .navbar-container {
+    min-height: var(--navbar-height);
+  }
+
+  .navbar-links,
+  .navbar-actions {
+    display: none;
+  }
+
+  .navbar-mobile-actions {
+    display: flex;
+  }
+
+  .navbar-mobile-menu {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    width: calc(100% - 28px);
+  }
+
+  .navbar-logo {
+    width: 41px;
+    height: 41px;
+    border-radius: 12px;
+  }
+
+  .navbar-logo svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .navbar-brand-name {
+    font-size: 23px;
+  }
+
+  .navbar-brand-tagline {
+    font-size: 7px;
+    letter-spacing: 0.8px;
+  }
+
+  .navbar-mobile-menu {
+    padding-inline: 16px;
+  }
+
+  .navbar-mobile-actions {
+    gap: 8px;
+  }
+
+  .navbar-theme-toggle,
+  .navbar-menu-toggle {
+    width: 39px;
+    height: 39px;
+  }
+}
+
+/* Reduced Motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar *,
+  .navbar *::before,
+  .navbar *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
