@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import "./AIFloatingButton.css";
+import { sendAIMessage } from "../../services/aiService";
 
 const QUICK_PROMPTS = [
   { icon: Activity, label: "Recovery exercises", message: "Suggest some general recovery exercises." },
@@ -70,26 +71,24 @@ export default function AIFloatingButton() {
     setIsSending(true);
 
     try {
-      // Connect your Rehabics backend API here.
-      // This demo deliberately does not pretend to generate real AI answers.
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const reply = await sendAIMessage(messageText);
 
       setMessages((previous) => [
         ...previous,
         {
           id: `assistant-${Date.now()}`,
           role: "assistant",
-          content:
-            "I'm currently in demo mode, so I can't generate a personalized AI response yet. Connect your Rehabics backend API to enable real conversations.\n\nFor medical concerns or persistent pain, please consult a qualified healthcare professional.",
+          content: reply,
         },
       ]);
-    } catch {
+    } catch (error) {
       setMessages((previous) => [
         ...previous,
         {
           id: `error-${Date.now()}`,
           role: "assistant",
           content:
+            error?.message ||
             "I couldn't process that message. Please try again in a moment.",
         },
       ]);

@@ -5,34 +5,7 @@ import Footer from "./components/Footer/Footer";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import AIFloatingButton from "./components/AIFloatingButton/AIFloatingButton";
 import Auth from "./pages/Auth/Auth";
-// import PatientDashboard from "./pages/PatientPanel/PatientPanel";
-// import PatientSettings from "./pages/Patients/PatientSettings";
-// import PatientProfile from "./pages/Patients/PatientProfile";
-// import PatientProgress from "./pages/Patients/PatientProgress";
-// import PatientExercises from "./pages/Patients/PatientExercises";
-// import PatientAppointments from "./pages/Patients/PatientAppointments";
-// import PatientLayout from "./pages/Patients/PatientLayout";
-// import PhysioLayout from "./pages/PhysioPanel/PhysioLayout";
-// import PhysioDashboard from "./pages/PhysioPanel/PhysioDashboard";
-// import {
-//   PhysioAppointments,
-//   PhysioPatients,
-//   PhysioProfile,
-//   PhysioProgress,
-//   PhysioSchedule,
-//   PhysioSettings,
-//   PhysioTreatmentPlans,
-// // } from "./pages/PhysioPanel/PhysioPages";
-// import AdminLayout from "./pages/AdminPanel/AdminLayout";
-// import AdminDashboard from "./pages/AdminPanel/AdminDashboard";
-// import {
-//   AdminAnalytics,
-//   AdminAppointments,
-//   AdminPatients,
-//   AdminPhysiotherapists,
-//   AdminSettings,
-//   AdminTreatmentPlans,
-// } from "./pages/AdminPanel/AdminPages";
+
 import Home from "./pages/Home/Home";
 import Services from "./pages/Services/Services";
 import Contact from "./pages/Contact/Contact";
@@ -83,6 +56,7 @@ function App() {
             </PublicLayout>
           }
         />
+        <Route path="/register" element={<Auth />} />
 
         <Route
           path="/appointment"

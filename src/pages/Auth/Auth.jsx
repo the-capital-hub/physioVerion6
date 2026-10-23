@@ -22,7 +22,9 @@ import {
 import "./Auth.css";
 
 const API_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:5000/api"
 ).replace(/\/+$/, "");
 
 const initialForm = {
@@ -79,8 +81,8 @@ const getDashboardPath = (user) => {
     return "/patient/dashboard";
   }
 
-  if (["physio", "physiotherapist"].includes(role)) {
-    return "/physio/dashboard";
+  if (["doctor", "physiotherapist"].includes(role)) {
+    return "/doctor/dashboard";
   }
 
   if (["admin", "administrator"].includes(role)) {
@@ -227,14 +229,21 @@ export default function Auth({ initialMode = "login" }) {
             password: form.password,
           };
 
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      let response;
+      try {
+        response = await fetch(`${API_URL}${endpoint}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (networkError) {
+        throw new Error(
+          `Cannot reach Rehabics backend at ${API_URL}. Start the backend and check VITE_API_URL and CORS settings.`
+        );
+      }
 
       // Some servers return an empty or non-JSON error response.
       const responseText = await response.text();
