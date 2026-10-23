@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar/Navbar";
@@ -6,24 +5,45 @@ import Footer from "./components/Footer/Footer";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import AIFloatingButton from "./components/AIFloatingButton/AIFloatingButton";
 import Auth from "./pages/Auth/Auth";
-import PatientDashboard from "./pages/PatientPanel/PatientPanel";
-import PatientSettings from "./pages/Patients/PatientSettings";
-import PatientProfile from "./pages/Patients/PatientProfile";
-import PatientProgress from "./pages/Patients/PatientProgress";
-import PatientExercises from "./pages/Patients/PatientExercises";
-import PatientAppointments from "./pages/Patients/PatientAppointments";
-import PatientLayout from "./pages/Patients/PatientLayout";
-import PhysioLayout from "./pages/PhysioPanel/PhysioLayout";
-import PhysioDashboard from "./pages/PhysioPanel/PhysioDashboard";
-import { PhysioAppointments, PhysioPatients, PhysioProfile, PhysioProgress, PhysioSchedule, PhysioSettings, PhysioTreatmentPlans } from "./pages/PhysioPanel/PhysioPages";
-import AdminLayout from "./pages/AdminPanel/AdminLayout";
-import AdminDashboard from "./pages/AdminPanel/AdminDashboard";
-import { AdminAnalytics, AdminAppointments, AdminPatients, AdminPhysiotherapists, AdminSettings, AdminTreatmentPlans } from "./pages/AdminPanel/AdminPages";
+// import PatientDashboard from "./pages/PatientPanel/PatientPanel";
+// import PatientSettings from "./pages/Patients/PatientSettings";
+// import PatientProfile from "./pages/Patients/PatientProfile";
+// import PatientProgress from "./pages/Patients/PatientProgress";
+// import PatientExercises from "./pages/Patients/PatientExercises";
+// import PatientAppointments from "./pages/Patients/PatientAppointments";
+// import PatientLayout from "./pages/Patients/PatientLayout";
+// import PhysioLayout from "./pages/PhysioPanel/PhysioLayout";
+// import PhysioDashboard from "./pages/PhysioPanel/PhysioDashboard";
+// import {
+//   PhysioAppointments,
+//   PhysioPatients,
+//   PhysioProfile,
+//   PhysioProgress,
+//   PhysioSchedule,
+//   PhysioSettings,
+//   PhysioTreatmentPlans,
+// // } from "./pages/PhysioPanel/PhysioPages";
+// import AdminLayout from "./pages/AdminPanel/AdminLayout";
+// import AdminDashboard from "./pages/AdminPanel/AdminDashboard";
+// import {
+//   AdminAnalytics,
+//   AdminAppointments,
+//   AdminPatients,
+//   AdminPhysiotherapists,
+//   AdminSettings,
+//   AdminTreatmentPlans,
+// } from "./pages/AdminPanel/AdminPages";
 import Home from "./pages/Home/Home";
+import Services from "./pages/Services/Services";
+import Contact from "./pages/Contact/Contact";
 import About from "./pages/About/About";
+import Appointment from "./pages/Appointment/Appointment";
+import Therapists from "./pages/thepoist/Therapists";
+import PatientPanel from "./pages/PatientPanel/PatientPanel";
+import DoctorPanel from "./pages/DoctorPanel/DoctorPanel";
+import AdminPanel from "./pages/AdminPanel/AdminPanel";
 
 // Patient portal files
-
 
 function PublicLayout({ children }) {
   return (
@@ -65,10 +85,10 @@ function App() {
         />
 
         <Route
-          path="/register"
+          path="/appointment"
           element={
             <PublicLayout>
-              <Auth initialMode="register" />
+              <Appointment/>
             </PublicLayout>
           }
         />
@@ -78,7 +98,7 @@ function App() {
           path="/"
           element={
             <PublicLayout>
-              <Home/>
+              <Home />
             </PublicLayout>
           }
         />
@@ -87,7 +107,7 @@ function App() {
           path="/about"
           element={
             <PublicLayout>
-              <About/>
+              <About />
             </PublicLayout>
           }
         />
@@ -96,7 +116,7 @@ function App() {
           path="/services"
           element={
             <PublicLayout>
-              <h1>Our Services</h1>
+              <Services />
             </PublicLayout>
           }
         />
@@ -105,7 +125,7 @@ function App() {
           path="/therapists"
           element={
             <PublicLayout>
-              <h1>Our Therapists</h1>
+              <Therapists/>
             </PublicLayout>
           }
         />
@@ -114,73 +134,63 @@ function App() {
           path="/contact"
           element={
             <PublicLayout>
-              <h1>Contact Us</h1>
+              <Contact />
             </PublicLayout>
           }
         />
 
         {/* Patient portal */}
-        <Route path="/patient" element={<PatientLayout />}>
-          <Route
-            index
-            element={<Navigate to="dashboard" replace />}
-          />
-          <Route
-            path="dashboard"
-            element={<PatientDashboard />}
-          />
-          <Route
-            path="appointments"
-            element={<PatientAppointments />}
-          />
-          <Route
-            path="exercises"
-            element={<PatientExercises />}
-          />
-          <Route
-            path="progress"
-            element={<PatientProgress />}
-          />
-          <Route
-            path="profile"
-            element={<PatientProfile />}
-          />
-          <Route
-            path="settings"
-            element={<PatientSettings />}
-          />
-        </Route>
+
+        <Route path="/patient/*" element={<PatientPanel />} />
+
+
+
+
+
+
+        {/* <Route path="/patient" element={<PatientLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<PatientDashboard />} />
+          <Route path="appointments" element={<PatientAppointments />} />
+          <Route path="exercises" element={<PatientExercises />} />
+          <Route path="progress" element={<PatientProgress />} />
+          <Route path="profile" element={<PatientProfile />} />
+          <Route path="settings" element={<PatientSettings />} />
+        </Route> */}
 
         {/* Physiotherapist portal */}
-        <Route path="/physio" element={<PhysioLayout />}>
-  <Route
-    index
-    element={<Navigate to="dashboard" replace />}
-  />
-  <Route path="dashboard" element={<PhysioDashboard />} />
-  <Route path="appointments" element={<PhysioAppointments />} />
-  <Route path="patients" element={<PhysioPatients />} />
-  <Route path="treatment-plans" element={<PhysioTreatmentPlans />} />
-  <Route path="progress" element={<PhysioProgress />} />
-  <Route path="schedule" element={<PhysioSchedule />} />
-  <Route path="profile" element={<PhysioProfile />} />
-  <Route path="settings" element={<PhysioSettings />} />
-</Route>
+            <Route path="/doctor/*" element={<DoctorPanel />} />
+
+
+
+        {/* <Route path="/physio" element={<PhysioLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<PhysioDashboard />} />
+          <Route path="appointments" element={<PhysioAppointments />} />
+          <Route path="patients" element={<PhysioPatients />} />
+          <Route path="treatment-plans" element={<PhysioTreatmentPlans />} />
+          <Route path="progress" element={<PhysioProgress />} />
+          <Route path="schedule" element={<PhysioSchedule />} />
+          <Route path="profile" element={<PhysioProfile />} />
+          <Route path="settings" element={<PhysioSettings />} />
+        </Route> */}
 
         {/* Admin portal */}
-        
-<Route path="/admin" element={<AdminLayout />}>
-  <Route index element={<AdminDashboard />} />
-  <Route path="dashboard" element={<AdminDashboard />} />
-  <Route path="patients" element={<AdminPatients />} />
-  <Route path="physiotherapists" element={<AdminPhysiotherapists />} />
-  <Route path="appointments" element={<AdminAppointments />} />
-  <Route path="treatment-plans" element={<AdminTreatmentPlans />} />
-  <Route path="analytics" element={<AdminAnalytics />} />
-  <Route path="settings" element={<AdminSettings />} />
-</Route>
 
 
+        {/* <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="patients" element={<AdminPatients />} />
+          <Route path="physiotherapists" element={<AdminPhysiotherapists />} />
+          <Route path="appointments" element={<AdminAppointments />} />
+          <Route path="treatment-plans" element={<AdminTreatmentPlans />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route> */}
+
+
+<Route path="/admin/*" element={<AdminPanel />} />
         {/* 404 */}
         <Route
           path="*"

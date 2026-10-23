@@ -96,8 +96,8 @@ export default function Navbar() {
             Log in
           </Link>
 
-          <Link to="/register" className="navbar-cta">
-            Get Started
+          <Link to="/appointment" className="navbar-cta">
+            Book Appointment
             <ArrowUpRight size={17} />
           </Link>
         </div>
@@ -174,11 +174,11 @@ export default function Navbar() {
               </Link>
 
               <Link
-                to="/register"
+                to="/appointmnet"
                 className="navbar-cta navbar-mobile-cta"
                 onClick={closeMenu}
               >
-                Get Started
+                Book Appointment
                 <ArrowUpRight size={17} />
               </Link>
             </div>

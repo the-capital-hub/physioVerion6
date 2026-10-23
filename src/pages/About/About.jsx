@@ -2,468 +2,429 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Activity,
   ArrowRight,
+  Sparkles,
   HeartPulse,
   ShieldCheck,
   Users,
   Target,
-  Eye,
-  CheckCircle2,
+  Activity,
   Stethoscope,
-  Clock3,
-  Sparkles,
+  CheckCircle2,
+  Compass,
+  HandHeart,
+  Lightbulb,
 } from "lucide-react";
 import "./About.css";
 
 const values = [
   {
-    icon: HeartPulse,
+    icon: HandHeart,
     title: "Patient First",
     description:
-      "Every recovery journey is unique. We focus on individual needs, comfort, and meaningful progress.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Trust & Safety",
-    description:
-      "We believe in transparent communication, responsible care, and building confidence throughout recovery.",
+      "Care starts by listening to your concerns, goals, and everyday challenges.",
   },
   {
     icon: Target,
     title: "Personalized Care",
     description:
-      "Rehabilitation plans should reflect each person's goals, abilities, and recovery requirements.",
+      "A recovery approach shaped around your needs, ability, and progress.",
   },
   {
-    icon: Sparkles,
-    title: "Continuous Progress",
+    icon: ShieldCheck,
+    title: "Trust and Clarity",
     description:
-      "We celebrate small improvements and encourage consistent effort toward better mobility and independence.",
+      "Clear guidance that helps you understand each step of your recovery journey.",
+  },
+  {
+    icon: Activity,
+    title: "Progress With Purpose",
+    description:
+      "Practical movement goals that support confidence in everyday life.",
   },
 ];
 
-const benefits = [
-  "Personalized rehabilitation journeys",
-  "Easy access to physiotherapy services",
-  "A focus on mobility and everyday independence",
-  "Clear communication throughout recovery",
+const principles = [
+  "Understand your needs and movement goals",
+  "Build a plan around your individual assessment",
+  "Practice guided exercises at a suitable pace",
+  "Review progress and adapt the plan when needed",
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.12 },
+const team = [
+  {
+    initials: "PT",
+    role: "Physiotherapy Team",
+    title: "Care built around people",
+    description:
+      "A patient focused approach to movement, recovery, and everyday wellbeing.",
   },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, ease: "easeOut" },
+  {
+    initials: "RC",
+    role: "Recovery Coordination",
+    title: "Support at every step",
+    description:
+      "Helping make the recovery journey easier to understand and navigate.",
   },
-};
+  {
+    initials: "WC",
+    role: "Wellness Community",
+    title: "Movement for real life",
+    description:
+      "Encouraging healthy habits and steady progress beyond each session.",
+  },
+];
 
-export default function About() {
+function SectionLabel({ children }) {
+  return <span className="ab-label">{children}</span>;
+}
+
+const About=()=> {
   return (
-    <main className="rehab-about">
-      {/* HERO */}
-      <section className="about-hero">
-        <div className="about-container about-hero-grid">
+    <main className="rehabics-about">
+      <section className="ab-hero">
+        <div className="ab-hero-orb ab-orb-one" />
+        <div className="ab-hero-orb ab-orb-two" />
+        <div className="ab-container ab-hero-grid">
           <motion.div
-            className="about-hero-content"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <span className="about-eyebrow">
-              <Activity size={16} />
-              ABOUT REHABICS
-            </span>
-
-            <h1>
-              Better movement.
-              <br />
-              <span>Better living.</span>
-            </h1>
-
-            <p>
-              We are building a more approachable rehabilitation experience
-              that helps patients connect with physiotherapy care and work
-              toward a more active, confident life.
-            </p>
-
-            <div className="about-hero-actions">
-              <Link to="/services" className="about-btn about-btn-primary">
-                Explore Our Services
-                <ArrowRight size={18} />
-              </Link>
-
-              <Link to="/contact" className="about-btn about-btn-secondary">
-                Get in Touch
-              </Link>
-            </div>
-
-            <div className="about-trust-note">
-              <span className="about-trust-icon">
-                <CheckCircle2 size={17} />
-              </span>
-              <span>Care that puts your recovery journey first</span>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="about-hero-visual"
-            initial={{ opacity: 0, scale: 0.94 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-          >
-            <div className="about-image-frame">
-              <img
-                src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1100&q=85"
-                alt="Healthcare professional supporting patient care"
-              />
-
-              <div className="about-image-overlay" />
-
-              <div className="about-floating-card">
-                <div className="about-floating-icon">
-                  <HeartPulse size={22} />
-                </div>
-                <div>
-                  <strong>Your journey matters</strong>
-                  <span>Care with purpose</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="about-hero-decoration about-decoration-one" />
-            <div className="about-hero-decoration about-decoration-two" />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* INTRODUCTION */}
-      <section className="about-intro section-space">
-        <div className="about-container about-intro-grid">
-          <motion.div
-            className="about-section-heading"
-            variants={itemVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.25 }}
-          >
-            <span className="about-eyebrow">WHO WE ARE</span>
-            <h2>
-              Recovery should feel like a <span>journey, not a struggle.</span>
-            </h2>
-          </motion.div>
-
-          <motion.div
-            className="about-intro-copy"
-            variants={itemVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.25 }}
-          >
-            <p>
-              Rehabics is designed around a simple idea: accessing
-              rehabilitation care should feel clear, supportive, and
-              patient-focused.
-            </p>
-            <p>
-              Whether someone is working to improve mobility, regain strength,
-              or return to everyday activities, the right support and
-              consistency can make the journey easier to navigate.
-            </p>
-            <p>
-              Our goal is to bring patients and physiotherapy professionals
-              together through a convenient, thoughtful digital experience.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* MISSION & VISION */}
-      <section className="about-purpose section-space">
-        <div className="about-container">
-          <div className="about-purpose-grid">
-            <motion.article
-              className="about-purpose-card about-mission-card"
-              variants={itemVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-            >
-              <div className="about-purpose-icon">
-                <Target size={26} />
-              </div>
-              <span className="about-card-label">OUR MISSION</span>
-              <h3>Make rehabilitation more accessible.</h3>
-              <p>
-                To create a patient-focused platform that simplifies the
-                journey toward finding physiotherapy support and staying
-                engaged with recovery goals.
-              </p>
-              <div className="about-card-watermark">
-                <Target size={100} />
-              </div>
-            </motion.article>
-
-            <motion.article
-              className="about-purpose-card about-vision-card"
-              variants={itemVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-            >
-              <div className="about-purpose-icon">
-                <Eye size={26} />
-              </div>
-              <span className="about-card-label">OUR VISION</span>
-              <h3>A future with more confident movement.</h3>
-              <p>
-                To help make quality rehabilitation experiences easier to
-                discover, more convenient to access, and more connected to
-                everyday life.
-              </p>
-              <div className="about-card-watermark">
-                <Eye size={100} />
-              </div>
-            </motion.article>
-          </div>
-        </div>
-      </section>
-
-      {/* CORE VALUES */}
-      <section className="about-values section-space">
-        <div className="about-container">
-          <motion.div
-            className="about-centered-heading"
+            className="ab-hero-copy"
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="about-eyebrow">WHAT GUIDES US</span>
-            <h2>
-              The values behind <span>every step.</span>
-            </h2>
-            <p>
-              Thoughtful principles that shape the experience we want to
-              create for patients and physiotherapy professionals.
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="about-values-grid"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.15 }}
-          >
-            {values.map((value) => {
-              const Icon = value.icon;
-
-              return (
-                <motion.article
-                  className="about-value-card"
-                  variants={itemVariants}
-                  key={value.title}
-                  whileHover={{ y: -7 }}
-                >
-                  <div className="about-value-icon">
-                    <Icon size={25} />
-                  </div>
-                  <h3>{value.title}</h3>
-                  <p>{value.description}</p>
-                  <div className="about-value-arrow">
-                    <ArrowRight size={18} />
-                  </div>
-                </motion.article>
-              );
-            })}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* PATIENT EXPERIENCE */}
-      <section className="about-experience section-space">
-        <div className="about-container about-experience-grid">
-          <motion.div
-            className="about-experience-visual"
-            initial={{ opacity: 0, x: -25 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.65 }}
-          >
-            <img
-              src="https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=1000&q=85"
-              alt="A welcoming healthcare environment"
-              loading="lazy"
-            />
-
-            <div className="about-experience-badge">
-              <Users size={20} />
-              <span>People at the heart of care</span>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="about-experience-content"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            <motion.span className="about-eyebrow" variants={itemVariants}>
-              THE REHABICS APPROACH
-            </motion.span>
-
-            <motion.h2 variants={itemVariants}>
-              Your recovery is personal. Your care should be too.
-            </motion.h2>
-
-            <motion.p variants={itemVariants}>
-              Every person has different goals, challenges, and circumstances.
-              Rehabics aims to support that individuality with a more
-              connected and convenient rehabilitation experience.
-            </motion.p>
-
-            <motion.div className="about-benefits-list" variants={itemVariants}>
-              {benefits.map((benefit) => (
-                <div className="about-benefit-item" key={benefit}>
-                  <CheckCircle2 size={19} />
-                  <span>{benefit}</span>
-                </div>
-              ))}
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <Link to="/services" className="about-text-link">
-                Discover how it works
-                <ArrowRight size={18} />
-              </Link>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section className="about-process section-space">
-        <div className="about-container">
-          <motion.div
-            className="about-centered-heading"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="about-eyebrow">YOUR NEXT STEPS</span>
-            <h2>
-              A clearer path to <span>care.</span>
-            </h2>
-            <p>
-              A simple starting point for connecting with the services you
-              need.
-            </p>
-          </motion.div>
-
-          <div className="about-process-grid">
-            <motion.article
-              className="about-process-card"
-              variants={itemVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              <span className="about-step-number">01</span>
-              <div className="about-process-icon">
-                <Users size={24} />
-              </div>
-              <h3>Explore</h3>
-              <p>
-                Discover the available physiotherapy services and find the
-                information that fits your needs.
-              </p>
-            </motion.article>
-
-            <motion.article
-              className="about-process-card"
-              variants={itemVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              <span className="about-step-number">02</span>
-              <div className="about-process-icon">
-                <Stethoscope size={24} />
-              </div>
-              <h3>Connect</h3>
-              <p>
-                Take the next step toward connecting with a physiotherapy
-                professional through the available platform options.
-              </p>
-            </motion.article>
-
-            <motion.article
-              className="about-process-card"
-              variants={itemVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-            >
-              <span className="about-step-number">03</span>
-              <div className="about-process-icon">
-                <Clock3 size={24} />
-              </div>
-              <h3>Keep progressing</h3>
-              <p>
-                Stay focused on your recovery goals and follow the guidance
-                provided by your healthcare professional.
-              </p>
-            </motion.article>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="about-cta-section">
-        <div className="about-container">
-          <motion.div
-            className="about-cta-card"
-            initial={{ opacity: 0, y: 25 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="about-cta-content">
-              <span className="about-cta-label">
-                YOUR JOURNEY STARTS HERE
-              </span>
-              <h2>Take the next step toward better movement.</h2>
+            <span className="ab-pill">
+              <Sparkles size={14} /> About Rehabics
+            </span>
+            <h1>
+              Helping You Move Better. <span>Live Brighter.</span>
+            </h1>
+            <p>
+              We believe recovery should feel personal, understandable, and
+              focused on what matters to you. Rehabics brings thoughtful care
+              and guided movement together for your recovery journey.
+            </p>
+            <div className="ab-actions">
+              <Link to="/services" className="ab-btn ab-btn-primary">
+                Explore Our Services <ArrowRight size={16} />
+              </Link>
+              <a href="#our-story" className="ab-btn ab-btn-outline">
+                Discover Our Story
+              </a>
+            </div>
+            <div className="ab-proof">
+              <div className="ab-proof-icons">
+                <span>
+                  <HeartPulse size={16} />
+                </span>
+                <span>
+                  <Users size={16} />
+                </span>
+                <span>
+                  <Activity size={16} />
+                </span>
+              </div>
               <p>
-                Explore our services and discover the rehabilitation support
-                available through Rehabics.
+                <b>Care with purpose</b>
+                <small>Focused on your goals and progress</small>
               </p>
             </div>
+          </motion.div>
 
-            <div className="about-cta-actions">
-              <Link to="/services" className="about-btn about-cta-primary">
-                Explore Services
-                <ArrowRight size={18} />
-              </Link>
-              <Link to="/contact" className="about-cta-contact">
-                Have questions? Contact us
-              </Link>
+          <motion.div
+            className="ab-hero-visual"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1300&q=90"
+              alt="Physiotherapist supporting a patient during a rehabilitation session"
+            />
+            <div className="ab-image-shade" />
+            <div className="ab-float-card ab-float-care">
+              <span>
+                <HeartPulse size={19} />
+              </span>
+              <div>
+                <b>People first</b>
+                <small>Care shaped around you</small>
+              </div>
             </div>
-
-            <div className="about-cta-decoration" />
+            <div className="ab-float-card ab-float-progress">
+              <span>
+                <Activity size={19} />
+              </span>
+              <div>
+                <b>Progress focused</b>
+                <small>One step at a time</small>
+              </div>
+            </div>
+            <div className="ab-image-note">
+              Your journey.
+              <br />
+              Your pace.
+            </div>
           </motion.div>
         </div>
+
+        <div className="ab-container ab-trust-row">
+          <div>
+            <span>
+              <ShieldCheck size={19} />
+            </span>
+            <p>
+              <b>Patient focused</b>
+              <small>Your needs come first</small>
+            </p>
+          </div>
+          <div>
+            <span>
+              <Stethoscope size={19} />
+            </span>
+            <p>
+              <b>Guided support</b>
+              <small>Clear, thoughtful care</small>
+            </p>
+          </div>
+          <div>
+            <span>
+              <Target size={19} />
+            </span>
+            <p>
+              <b>Personal goals</b>
+              <small>Progress that matters</small>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="ab-section" id="our-story">
+        <div className="ab-container ab-story-grid">
+          <motion.div
+            className="ab-story-visual"
+            initial={{ opacity: 0, x: -18 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5 }}
+          >
+            <img
+              src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1000&q=85"
+              alt="Guided exercise in a modern rehabilitation setting"
+              loading="lazy"
+            />
+            <div className="ab-story-stamp">
+              <HeartPulse size={21} />
+              <span>
+                Movement
+                <br />
+                with meaning
+              </span>
+            </div>
+          </motion.div>
+          <motion.div
+            className="ab-story-copy"
+            initial={{ opacity: 0, x: 18 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.5 }}
+          >
+            <SectionLabel>Our Story</SectionLabel>
+            <h2>Recovery is more than getting back on your feet.</h2>
+            <p>
+              It is about rebuilding confidence, understanding your body, and
+              returning to the activities that make everyday life meaningful.
+              Rehabics is designed around that bigger picture.
+            </p>
+            <p>
+              Our approach brings professional guidance, individual goals, and
+              practical movement together so the recovery journey feels clearer
+              from the first step onward.
+            </p>
+            <div className="ab-story-highlight">
+              <span>
+                <CheckCircle2 size={18} />
+              </span>
+              <p>
+                <b>A plan that starts with you</b>
+                <small>
+                  Your needs, your goals, and your pace guide the journey.
+                </small>
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="ab-section ab-mission-section">
+        <div className="ab-container">
+          <div className="ab-heading ab-heading-center">
+            <SectionLabel>Our Purpose</SectionLabel>
+            <h2>
+              Care that keeps <span>you at the centre.</span>
+            </h2>
+            <p>
+              Our purpose is to make the path toward better movement feel more
+              personal, supportive, and clear.
+            </p>
+          </div>
+          <div className="ab-purpose-grid">
+            <motion.article
+              className="ab-purpose-card ab-purpose-main"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.2 }}
+            >
+              <span className="ab-purpose-icon">
+                <Target size={22} />
+              </span>
+              <small>OUR MISSION</small>
+              <h3>Make recovery feel personal.</h3>
+              <p>
+                Support people with thoughtful guidance and practical steps that
+                reflect their individual recovery goals.
+              </p>
+              <div className="ab-purpose-decoration">
+                <HeartPulse size={84} />
+              </div>
+            </motion.article>
+            <motion.article
+              className="ab-purpose-card"
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.2 }}
+            >
+              <span className="ab-purpose-icon">
+                <Compass size={22} />
+              </span>
+              <small>OUR VISION</small>
+              <h3>Help people move with confidence.</h3>
+              <p>
+                Encourage a future where people feel better informed and more
+                confident about their movement and wellbeing.
+              </p>
+            </motion.article>
+          </div>
+        </div>
+      </section>
+
+      <section className="ab-section">
+        <div className="ab-container">
+          <div className="ab-heading">
+            <SectionLabel>What Guides Us</SectionLabel>
+            <h2>Values behind every step.</h2>
+            <p>
+              Thoughtful care is built on trust, collaboration, and a clear
+              focus on the person.
+            </p>
+          </div>
+          <div className="ab-values-grid">
+            {values.map(({ icon: Icon, title, description }, index) => (
+              <motion.article
+                className="ab-value-card"
+                key={title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.12 }}
+                transition={{ duration: 0.4, delay: index * 0.06 }}
+              >
+                <span className="ab-value-icon">
+                  <Icon size={21} />
+                </span>
+                <h3>{title}</h3>
+                <p>{description}</p>
+                <span className="ab-value-number">0{index + 1}</span>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="ab-section ab-approach-section">
+        <div className="ab-container ab-approach-grid">
+          <div className="ab-approach-copy">
+            <SectionLabel>Our Approach</SectionLabel>
+            <h2>
+              Small steps. <span>Meaningful progress.</span>
+            </h2>
+            <p>
+              Every recovery journey is different. A clear process can help you
+              understand what comes next and work toward your goals at a
+              suitable pace.
+            </p>
+            <Link to="/services" className="ab-text-link">
+              Explore our services <ArrowRight size={15} />
+            </Link>
+          </div>
+          <div className="ab-principles">
+            {principles.map((principle, index) => (
+              <div className="ab-principle" key={principle}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <p>{principle}</p>
+                <CheckCircle2 size={17} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="ab-section">
+        <div className="ab-container">
+          <div className="ab-heading ab-heading-center">
+            <SectionLabel>The People Behind the Journey</SectionLabel>
+            <h2>Support that sees the person, not just the problem.</h2>
+            <p>
+              Rehabics is built around collaboration and supportive care
+              throughout the recovery journey.
+            </p>
+          </div>
+          <div className="ab-team-grid">
+            {team.map(({ initials, role, title, description }, index) => (
+              <motion.article
+                className="ab-team-card"
+                key={role}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.12 }}
+                transition={{ duration: 0.4, delay: index * 0.07 }}
+              >
+                <div className={`ab-team-art ab-team-art-${index + 1}`}>
+                  <div className="ab-team-avatar">{initials}</div>
+                  <span>
+                    <Sparkles size={17} />
+                  </span>
+                </div>
+                <div className="ab-team-copy">
+                  <small>{role}</small>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+          <p className="ab-team-note">
+            Replace these illustrative team cards with your actual team profiles
+            before publishing.
+          </p>
+        </div>
+      </section>
+
+      <section className="ab-container ab-cta">
+        <div className="ab-cta-art">
+          <div className="ab-cta-ring">
+            <HeartPulse size={45} />
+          </div>
+        </div>
+        <div className="ab-cta-copy">
+          <small>YOUR NEXT STEP STARTS HERE</small>
+          <h2>Let’s move toward better, together.</h2>
+          <p>
+            Explore our physiotherapy services and find the next step for your
+            recovery journey.
+          </p>
+        </div>
+        <Link to="/login" className="ab-btn ab-btn-light">
+          Get Started <ArrowRight size={16} />
+        </Link>
       </section>
     </main>
   );
 }
+export default About

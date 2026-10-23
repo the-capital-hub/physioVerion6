@@ -1,734 +1,322 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
-  ArrowUpRight,
-  MapPin,
-  Phone,
-  Mail,
-  Clock3,
-  Send,
-  HeartPulse,
-  CalendarCheck,
-  ShieldCheck,
-  Plus,
-  Minus,
   CheckCircle2,
+  Clock3,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
 } from "lucide-react";
-
-import {
-  FaInstagram,
-  FaFacebookF,
-  FaLinkedinIn,
-  FaYoutube,
-  FaWhatsapp,
-} from "react-icons/fa";
-
 import "./Contact.css";
-import image1 from '../../assets/contact/image1.jpeg'
-import image2 from '../../assets/contact/image2.jpeg'
-import image3 from '../../assets/contact/image3.jpeg'
-import image4 from '../../assets/contact/image4.jpeg'
 
-import image5 from '../../assets/contact/image5.jpeg'
-const contactInfo = [
+const contactDetails = [
   {
     icon: Phone,
-    title: "Call Us",
-    value: "+91 XXXXXXXXXX",
-    note: "Speak with our team",
-    href: "tel:+91XXXXXXXXXX",
+    title: "Call our team",
+    detail: "Speak with our care team",
+    action: "tel:+910000000000",
+    actionLabel: "Call us",
   },
   {
     icon: Mail,
-    title: "Email Us",
-    value: "hello@rehabics.in",
-    note: "Send us your enquiry",
-    href: "mailto:hello@rehabics.in",
+    title: "Email us",
+    detail: "Send us your questions",
+    action: "mailto:hello@rehabics.com",
+    actionLabel: "Send an email",
   },
   {
     icon: MapPin,
-    title: "Visit Our Clinic",
-    value: "Add your clinic address",
-    note: "We look forward to meeting you",
-    href: "#clinic",
-  },
-  {
-    icon: Clock3,
-    title: "Clinic Hours",
-    value: "Monday to Saturday",
-    note: "Add your confirmed timings",
-    href: "#clinic",
+    title: "Visit us",
+    detail: "Ask us about clinic locations",
+    action: "#contact-form",
+    actionLabel: "Send an enquiry",
   },
 ];
 
-const benefits = [
-  {
-    icon: HeartPulse,
-    title: "Personalised Guidance",
-    description:
-      "Tell us what support you are looking for and we will help you understand the next step.",
-  },
-  {
-    icon: CalendarCheck,
-    title: "Appointment Enquiries",
-    description:
-      "Ask about appointment availability and the services offered at our clinic.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Your Information Matters",
-    description:
-      "Share only the details needed for our team to understand your enquiry.",
-  },
-];
+const initialForm = {
+  name: "",
+  email: "",
+  phone: "",
+  reason: "Physiotherapy enquiry",
+  message: "",
+};
 
-const socialLinks = [
-  {
-    name: "Instagram",
-    icon: FaInstagram,
-    href: "https://www.instagram.com/YOUR_HANDLE/",
-  },
-  {
-    name: "Facebook",
-    icon: FaFacebookF,
-    href: "https://www.facebook.com/YOUR_PAGE/",
-  },
-  {
-    name: "LinkedIn",
-    icon: FaLinkedinIn,
-    href: "https://www.linkedin.com/company/YOUR_PAGE/",
-  },
-  {
-    name: "YouTube",
-    icon: FaYoutube,
-    href: "https://www.youtube.com/@YOUR_CHANNEL",
-  },
-  {
-    name: "WhatsApp",
-    icon: FaWhatsapp,
-    href: "https://wa.me/91XXXXXXXXXX",
-  },
-];
+export default function Contact() {
+  const [form, setForm] = useState(initialForm);
+  const [submitted, setSubmitted] = useState(false);
 
-const faqs = [
-  {
-    question: "How do I book an appointment?",
-    answer:
-      "Send us an enquiry or call the clinic using the contact details above. Our team can guide you through the available booking options.",
-  },
-  {
-    question: "Which physiotherapy service is right for me?",
-    answer:
-      "Tell us about the type of support you are looking for. A suitable treatment plan may require an individual assessment by a qualified professional.",
-  },
-  {
-    question: "What should I bring to my first visit?",
-    answer:
-      "Follow the instructions shared when your appointment is confirmed. You may also bring relevant medical reports or previous assessment details if available.",
-  },
-  {
-    question: "Can I contact you with a general question?",
-    answer:
-      "Yes. You can use the enquiry form for general questions about clinic information, services and appointments.",
-  },
-];
-
-const Contact = () => {
-  const reduceMotion = useReducedMotion();
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    service: "",
-    message: "",
-  });
-
-  const [openFaq, setOpenFaq] = useState(0);
-  const [formStatus, setFormStatus] = useState("");
-
-  const reveal = {
-    hidden: {
-      opacity: 0,
-      y: reduceMotion ? 0 : 22,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: reduceMotion ? 0 : 0.55,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  const handleChange = (event) => {
+  const updateField = (event) => {
     const { name, value } = event.target;
-
-    setFormData((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-
-    if (formStatus) {
-      setFormStatus("");
-    }
+    setForm((current) => ({ ...current, [name]: value }));
+    setSubmitted(false);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    // This is a frontend demo.
-    // Connect an API or form service to actually deliver enquiries.
-    setFormStatus(
-      "Your details are ready. The form still needs to be connected to the clinic inbox before your enquiry can be sent."
+    const subject = encodeURIComponent(`Rehabics enquiry: ${form.reason}`);
+    const body = encodeURIComponent(
+      `Name: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone || "Not provided"}\nReason: ${form.reason}\n\nMessage:\n${form.message}`,
     );
+    window.location.href = `mailto:hello@rehabics.com?subject=${subject}&body=${body}`;
+    setSubmitted(true);
   };
 
   return (
-    <main className="rehab-contact">
-      {/* HERO */}
-
-      <section className="contact-hero">
-        <div className="contact-hero-content">
+    <main className="rehabics-contact">
+      <section className="ct-hero">
+        <div className="ct-orb ct-orb-one" />
+        <div className="ct-orb ct-orb-two" />
+        <div className="ct-container ct-hero-grid">
           <motion.div
-            className="contact-hero-copy"
-            variants={reveal}
-            initial="hidden"
-            animate="visible"
+            className="ct-hero-copy"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
           >
-            <span className="contact-eyebrow">
-              <span className="contact-eyebrow-dot" />
-              CONTACT REHABICS
+            <span className="ct-pill">
+              <Sparkles size={14} /> Contact Rehabics
             </span>
-
             <h1>
-              Let’s Get You
-              <span> Moving Forward.</span>
+              Let’s talk about <span>your next step.</span>
             </h1>
-
             <p>
-              Have a question about physiotherapy, recovery or our services?
-              We’re here to help you understand your options and take the next
-              step with confidence.
+              Questions about physiotherapy or your recovery journey? Reach out
+              to our team. We’re here to help you understand the options and
+              find a suitable next step.
             </p>
-
-            <div className="contact-hero-actions">
-              <a className="contact-btn contact-btn-primary" href="#enquiry">
-                Send an Enquiry
-                <ArrowRight size={18} />
-              </a>
-
-              <Link className="contact-btn contact-btn-outline" to="/services">
-                Explore Services
-                <ArrowUpRight size={18} />
-              </Link>
-            </div>
-
-            <div className="contact-hero-note">
-              <span className="contact-note-icon">
-                <HeartPulse size={20} />
+            <a className="ct-text-link" href="#contact-form">
+              Send us a message <ArrowRight size={16} />
+            </a>
+            <div className="ct-hero-note">
+              <span>
+                <ShieldCheck size={19} />
               </span>
-              <div>
-                <strong>Here for your next step</strong>
-                <span>Support, clarity and better movement.</span>
-              </div>
+              <p>
+                <b>Your enquiry matters</b>
+                <small>Share only the information needed to contact you.</small>
+              </p>
             </div>
           </motion.div>
-
           <motion.div
-            className="contact-hero-visual"
-            initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
+            className="ct-hero-image"
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: reduceMotion ? 0 : 0.7 }}
+            transition={{ duration: 0.65, delay: 0.1 }}
           >
             <img
-              src={image1}
-              alt="Physiotherapist helping a patient with a guided mobility exercise"
+              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1300&q=90"
+              alt="Healthcare professional talking with a patient"
             />
-
-            <div className="contact-image-label">
-              <span className="contact-image-label-icon">
-                <HeartPulse size={21} />
+            <div className="ct-image-overlay" />
+            <div className="ct-image-card">
+              <span>
+                <MessageCircle size={19} />
               </span>
               <div>
-                <strong>Movement with purpose</strong>
-                <span>Care that starts with a conversation.</span>
+                <b>We’re listening</b>
+                <small>Let’s find the right next step</small>
               </div>
+            </div>
+            <div className="ct-image-tag">
+              <HeartPulseFallback /> Care starts
+              <br />
+              with a conversation
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* CONTACT DETAILS */}
-
-      <section className="contact-info-section">
-        <div className="contact-info-grid">
-          {contactInfo.map((item, index) => {
-            const Icon = item.icon;
-
-            return (
-              <motion.a
-                href={item.href}
-                key={item.title}
-                className="contact-info-card"
-                variants={reveal}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.25 }}
-                transition={{ delay: index * 0.06 }}
+      <section className="ct-contact-cards">
+        <div className="ct-container ct-cards-grid">
+          {contactDetails.map(
+            ({ icon: Icon, title, detail, action, actionLabel }, index) => (
+              <motion.article
+                className="ct-info-card"
+                key={title}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.35, delay: index * 0.06 }}
               >
-                <span className="contact-info-icon">
+                <span className="ct-info-icon">
                   <Icon size={21} />
                 </span>
-
-                <div className="contact-info-copy">
-                  <span className="contact-info-title">{item.title}</span>
-                  <strong>{item.value}</strong>
-                  <span className="contact-info-note">{item.note}</span>
+                <div className="ct-info-copy">
+                  <h2>{title}</h2>
+                  <p>{detail}</p>
+                  <a href={action}>
+                    {actionLabel} <ArrowRight size={14} />
+                  </a>
                 </div>
-
-                <ArrowUpRight
-                  className="contact-info-arrow"
-                  size={17}
-                />
-              </motion.a>
-            );
-          })}
+              </motion.article>
+            ),
+          )}
         </div>
       </section>
 
-      {/* ENQUIRY FORM */}
-
-      <section className="contact-enquiry-section" id="enquiry">
-        <div className="contact-enquiry-layout">
+      <section className="ct-section" id="contact-form">
+        <div className="ct-container ct-form-grid">
           <motion.div
-            className="contact-enquiry-copy"
-            variants={reveal}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
+            className="ct-form-intro"
+            initial={{ opacity: 0, x: -16 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.45 }}
           >
-            <span className="contact-eyebrow">
-              <span className="contact-eyebrow-dot" />
-              SEND US A MESSAGE
-            </span>
-
+            <span className="ct-label">Get in touch</span>
             <h2>
-              Tell Us How
-              <span> We Can Help.</span>
+              Tell us how we can <span>help you.</span>
             </h2>
-
-            <p className="contact-section-description">
-              Share your contact details and a brief message. Our team can
-              review your enquiry once the form is connected to the clinic’s
-              inbox.
-            </p>
-
-            <div className="contact-benefits">
-              {benefits.map((benefit) => {
-                const Icon = benefit.icon;
-
-                return (
-                  <div className="contact-benefit" key={benefit.title}>
-                    <span className="contact-benefit-icon">
-                      <Icon size={19} />
-                    </span>
-
-                    <div>
-                      <h3>{benefit.title}</h3>
-                      <p>{benefit.description}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="contact-direct-card">
-              <span className="contact-direct-icon">
-                <Mail size={19} />
-              </span>
-              <div>
-                <span>Prefer email?</span>
-                <a href="mailto:hello@rehabics.in">
-                  hello@rehabics.in
-                </a>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="contact-form-card"
-            variants={reveal}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            <div className="contact-form-heading">
-              <div>
-                <span className="contact-form-kicker">YOUR ENQUIRY</span>
-                <h3>Let’s start a conversation.</h3>
-              </div>
-
-              <span className="contact-form-heading-icon">
-                <Send size={20} />
-              </span>
-            </div>
-
-            <form className="contact-form" onSubmit={handleSubmit}>
-              <div className="contact-form-grid">
-                <div className="contact-field">
-                  <label htmlFor="contact-name">
-                    Full Name <span>*</span>
-                  </label>
-                  <input
-                    id="contact-name"
-                    name="name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    autoComplete="name"
-                    minLength={2}
-                    required
-                  />
-                </div>
-
-                <div className="contact-field">
-                  <label htmlFor="contact-email">
-                    Email Address <span>*</span>
-                  </label>
-                  <input
-                    id="contact-email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-
-                <div className="contact-field">
-                  <label htmlFor="contact-phone">
-                    Phone Number <span>*</span>
-                  </label>
-                  <input
-                    id="contact-phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    autoComplete="tel"
-                    required
-                  />
-                </div>
-
-                <div className="contact-field">
-                  <label htmlFor="contact-service">
-                    Enquiry Type <span>*</span>
-                  </label>
-                  <select
-                    id="contact-service"
-                    name="service"
-                    value={formData.service}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select an option</option>
-                    <option value="appointment">
-                      Appointment enquiry
-                    </option>
-                    <option value="physiotherapy">
-                      Physiotherapy services
-                    </option>
-                    <option value="recovery">
-                      Recovery support
-                    </option>
-                    <option value="general">
-                      General question
-                    </option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
-                <div className="contact-field contact-field-full">
-                  <label htmlFor="contact-message">
-                    Your Message <span>*</span>
-                  </label>
-                  <textarea
-                    id="contact-message"
-                    name="message"
-                    rows="5"
-                    placeholder="Tell us a little about how we can help..."
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <p className="contact-form-privacy">
-                Please avoid sharing sensitive medical information in this
-                initial enquiry.
-              </p>
-
-              <button
-                type="submit"
-                className="contact-btn contact-btn-primary contact-submit-btn"
-              >
-                Send Enquiry
-                <ArrowRight size={18} />
-              </button>
-
-              {formStatus && (
-                <div className="contact-form-status" role="status">
-                  <CheckCircle2 size={20} />
-                  <p>{formStatus}</p>
-                </div>
-              )}
-            </form>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* CLINIC */}
-
-      <section className="contact-clinic-section" id="clinic">
-        <div className="contact-clinic-image">
-          <img
-            src={image2}
-            alt="Modern physiotherapy clinic reception and waiting area"
-            loading="lazy"
-          />
-          <div className="contact-clinic-image-caption">
-            <MapPin size={18} />
-            <span>Your space for movement and recovery</span>
-          </div>
-        </div>
-
-        <motion.div
-          className="contact-clinic-copy"
-          variants={reveal}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.25 }}
-        >
-          <span className="contact-eyebrow">
-            <span className="contact-eyebrow-dot" />
-            VISIT OUR CLINIC
-          </span>
-
-          <h2>
-            A Space Designed
-            <span> For Your Recovery.</span>
-          </h2>
-
-          <p>
-            We aim to provide a welcoming environment where you can ask
-            questions, understand your options and take your next step with
-            confidence.
-          </p>
-
-          <div className="contact-clinic-address">
-            <span className="contact-clinic-address-icon">
-              <MapPin size={21} />
-            </span>
-            <div>
-              <strong>Find Rehabics</strong>
-              <p>
-                Add your verified clinic address here before publishing the
-                website.
-              </p>
-            </div>
-          </div>
-
-          <a
-            className="contact-btn contact-btn-outline"
-            href="https://maps.google.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Get Directions
-            <ArrowUpRight size={18} />
-          </a>
-        </motion.div>
-      </section>
-
-      {/* SOCIAL MEDIA */}
-
-      <section className="contact-social-map-section">
-        <div className="contact-social-card">
-          <span className="contact-eyebrow">
-            <span className="contact-eyebrow-dot" />
-            FOLLOW REHABICS
-          </span>
-
-          <h2>
-            Stay Connected
-            <span> With Us.</span>
-          </h2>
-
-          <p>
-            Follow our channels for clinic updates, movement education and
-            helpful recovery information.
-          </p>
-
-          <div className="contact-social-list">
-            {socialLinks.map(({ name, icon: Icon, href }) => (
-              <a
-                key={name}
-                href={href}
-                className="contact-social-link"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Visit Rehabics on ${name}`}
-                title={name}
-              >
-                <Icon size={20} />
-              </a>
-            ))}
-          </div>
-
-          <span className="contact-social-note">
-            Replace these sample links with your official social profiles.
-          </span>
-        </div>
-
-        <div className="contact-map-card">
-          <img
-            src={image3}
-            alt="Bright physiotherapy treatment room with rehabilitation equipment"
-            loading="lazy"
-          />
-
-          <div className="contact-map-overlay">
-            <span className="contact-map-icon">
-              <MapPin size={22} />
-            </span>
-
-            <div>
-              <strong>Rehabics Clinic</strong>
-              <p>Add your verified address to help visitors find you.</p>
-
-              <a
-                href="https://maps.google.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open Google Maps
-                <ArrowUpRight size={15} />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-
-      <section className="contact-faq-section">
-        <div className="contact-faq-heading">
-          <div>
-            <span className="contact-eyebrow">
-              <span className="contact-eyebrow-dot" />
-              FREQUENTLY ASKED QUESTIONS
-            </span>
-
-            <h2>
-              Quick Answers<span>.</span>
-            </h2>
-
             <p>
-              A few helpful details before you get in touch with our team.
+              Fill in the form and your email app will open with your message
+              prepared. You can review it before sending.
             </p>
-          </div>
-
-          <div className="contact-faq-help">
-            <span>Still have a question?</span>
-            <a href="#enquiry">
-              Contact Us
-              <ArrowRight size={16} />
-            </a>
-          </div>
-        </div>
-
-        <div className="contact-faq-grid">
-          {faqs.map((faq, index) => {
-            const isOpen = openFaq === index;
-
-            return (
-              <div
-                className={`contact-faq-item ${isOpen ? "is-open" : ""}`}
-                key={faq.question}
-              >
-                <button
-                  className="contact-faq-question"
-                  type="button"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpenFaq(isOpen ? -1 : index)}
-                >
-                  <span className="contact-faq-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-
-                  <span>{faq.question}</span>
-
-                  <span className="contact-faq-toggle">
-                    {isOpen ? <Minus size={18} /> : <Plus size={18} />}
-                  </span>
-                </button>
-
-                {isOpen && (
-                  <div className="contact-faq-answer">
-                    <p>{faq.answer}</p>
-                  </div>
-                )}
+            <div className="ct-availability">
+              <span>
+                <Clock3 size={18} />
+              </span>
+              <div>
+                <b>Prefer a quick conversation?</b>
+                <small>
+                  Use the contact options above to reach out directly.
+                </small>
               </div>
-            );
-          })}
+            </div>
+            <div className="ct-assurance">
+              <CheckCircle2 size={17} /> No account required to send an enquiry
+            </div>
+            <div className="ct-assurance">
+              <ShieldCheck size={17} /> Please do not include urgent or highly
+              sensitive medical details
+            </div>
+          </motion.div>
+
+          <motion.form
+            className="ct-form"
+            onSubmit={handleSubmit}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.12 }}
+            transition={{ duration: 0.45 }}
+          >
+            <div className="ct-form-heading">
+              <div>
+                <span>CONTACT FORM</span>
+                <h3>Send an enquiry</h3>
+              </div>
+              <span className="ct-form-heading-icon">
+                <Send size={18} />
+              </span>
+            </div>
+            <div className="ct-fields">
+              <label>
+                Full name <span>*</span>
+                <input
+                  name="name"
+                  value={form.name}
+                  onChange={updateField}
+                  placeholder="Your full name"
+                  autoComplete="name"
+                  required
+                />
+              </label>
+              <label>
+                Email address <span>*</span>
+                <input
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={updateField}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+              <label>
+                Phone number
+                <input
+                  name="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={updateField}
+                  placeholder="Your contact number"
+                  autoComplete="tel"
+                />
+              </label>
+              <label>
+                What can we help with? <span>*</span>
+                <select
+                  name="reason"
+                  value={form.reason}
+                  onChange={updateField}
+                  required
+                >
+                  <option>Physiotherapy enquiry</option>
+                  <option>Online consultation</option>
+                  <option>Services and pricing</option>
+                  <option>Technical support</option>
+                  <option>Other question</option>
+                </select>
+              </label>
+              <label className="ct-field-full">
+                Your message <span>*</span>
+                <textarea
+                  name="message"
+                  value={form.message}
+                  onChange={updateField}
+                  placeholder="Tell us briefly how we can help..."
+                  rows={4}
+                  required
+                />
+              </label>
+            </div>
+            <button type="submit" className="ct-submit">
+              Prepare email <ArrowRight size={16} />
+            </button>
+            {submitted && (
+              <p className="ct-form-feedback" role="status">
+                Your email app should open with the enquiry prepared. Please
+                review and send it there.
+              </p>
+            )}
+            <p className="ct-form-privacy">
+              By contacting us, you agree to use this form for general enquiries
+              only.
+            </p>
+          </motion.form>
         </div>
       </section>
 
-      {/* FINAL CTA */}
-
-      {/* <section className="contact-final-cta">
-        <div className="contact-final-glow" />
-
-        <div className="contact-final-copy">
-          <span className="contact-eyebrow">
-            <span className="contact-eyebrow-dot" />
-            YOUR NEXT STEP STARTS HERE
-          </span>
-
-          <h2>
-            Ready to Move
-            <span> Forward?</span>
-          </h2>
-
-          <p>
-            Reach out to our team with your questions and learn more about
-            the support available to you.
-          </p>
-        </div>
-
-        <div className="contact-final-actions">
-          <a className="contact-btn contact-btn-primary" href="#enquiry">
-            Talk to Our Team
-            <ArrowRight size={18} />
-          </a>
-
-          <Link className="contact-btn contact-btn-outline" to="/services">
-            Explore Services
-            <ArrowUpRight size={18} />
+      <section className="ct-bottom">
+        <div className="ct-container ct-bottom-inner">
+          <div className="ct-bottom-icon">
+            <Stethoscope size={26} />
+          </div>
+          <div>
+            <span className="ct-label">Need a place to start?</span>
+            <h2>Explore the care that fits your goals.</h2>
+            <p>Learn more about the services available through Rehabics.</p>
+          </div>
+          <Link to="/services" className="ct-bottom-btn">
+            Explore services <ArrowRight size={16} />
           </Link>
         </div>
-      </section> */}
+      </section>
     </main>
   );
-};
+}
 
-export default Contact;
+function HeartPulseFallback() {
+  return <HeartIcon />;
+}
+
+function HeartIcon() {
+  return <span aria-hidden="true">♡</span>;
+}
