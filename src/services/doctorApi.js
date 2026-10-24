@@ -1,53 +1,117 @@
+
 import axios from "axios";
 
-/**
- * Configure VITE_API_BASE_URL in your project root.
- * Set VITE_DOCTOR_* variables to your EXISTING backend paths.
- * Defaults below are examples only; replace them with your real routes.
- */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
-  headers: { "Content-Type": "application/json" }
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    "http://localhost:5000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 api.interceptors.request.use((config) => {
-  // Change this key if your existing login stores the token elsewhere.
-  const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const keys = ["token", "accessToken", "authToken"];
+
+  let token = null;
+
+  for (const key of keys) {
+    token =
+      localStorage.getItem(key) ||
+      sessionStorage.getItem(key);
+
+    if (token) break;
+  }
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 });
 
-const paths = {
-  overview: import.meta.env.VITE_DOCTOR_OVERVIEW_PATH || "/doctor/dashboard",
-  appointments: import.meta.env.VITE_DOCTOR_APPOINTMENTS_PATH || "/doctor/appointments",
-  patients: import.meta.env.VITE_DOCTOR_PATIENTS_PATH || "/doctor/patients",
-  plans: import.meta.env.VITE_DOCTOR_PLANS_PATH || "/doctor/treatment-plans",
-  exercises: import.meta.env.VITE_DOCTOR_EXERCISES_PATH || "/doctor/exercises",
-  messages: import.meta.env.VITE_DOCTOR_MESSAGES_PATH || "/doctor/messages",
-  reports: import.meta.env.VITE_DOCTOR_REPORTS_PATH || "/doctor/reports",
-  profile: import.meta.env.VITE_DOCTOR_PROFILE_PATH || "/doctor/profile"
-};
+const BASE = "/physiotherapist-portal";
 
-const unwrap = (response) => response?.data?.data ?? response?.data ?? null;
+function unwrap(response) {
+  const body = response?.data;
 
-export async function getDoctorOverview() { return unwrap(await api.get(paths.overview)); }
-export async function getDoctorAppointments() { return unwrap(await api.get(paths.appointments)); }
-export async function getDoctorPatients() { return unwrap(await api.get(paths.patients)); }
-export async function getTreatmentPlans() { return unwrap(await api.get(paths.plans)); }
-export async function getExerciseLibrary() { return unwrap(await api.get(paths.exercises)); }
-export async function getDoctorMessages() { return unwrap(await api.get(paths.messages)); }
-export async function getDoctorReports() { return unwrap(await api.get(paths.reports)); }
-export async function getDoctorProfile() { return unwrap(await api.get(paths.profile)); }
+  if (body?.success === false) {
+    throw new Error(body.message || "API request failed.");
+  }
+
+  return body?.data ?? body ?? null;
+}
+
+async function get(path) {
+  return unwrap(await api.get(path));
+}
+
+async function post(path, payload) {
+  return unwrap(await api.post(path, payload));
+}
+
+async function patch(path, payload) {
+  return unwrap(await api.patch(path, payload));
+}
+
+async function remove(path) {
+  return unwrap(await api.delete(path));
+}
+
+export async function getDoctorOverview() {
+  return get(`${BASE}/overview`);
+}
+
+export async function getDoctorAppointments() {
+  return get(`${BASE}/appointments`);
+}
+
+export async function getDoctorPatients() {
+  return get(`${BASE}/patients`);
+}
+
+export async function getTreatmentPlans() {
+  return get(`${BASE}/recovery-plans`);
+}
+
+export async function getExerciseLibrary() {
+  return get(`${BASE}/exercises`);
+}
+
+export async function getDoctorMessages() {
+  return get(`${BASE}/messages`);
+}
+
+export async function getDoctorProfile() {
+  return get(`${BASE}/profile`);
+}
 
 export async function updateDoctorAppointmentStatus(id, status) {
-  const path = `${paths.appointments}/${encodeURIComponent(id)}/status`;
-  return unwrap(await api.patch(path, { status }));
+  return patch(
+    `${BASE}/appointments/${encodeURIComponent(id)}`,
+    { status }
+  );
 }
+
+export async function createDoctorAppointment(payload) {
+  return post(`${BASE}/appointments`, payload);
+}
+
 export async function updateTreatmentPlan(id, changes) {
-  return unwrap(await api.patch(`${paths.plans}/${encodeURIComponent(id)}`, changes));
+  return patch(
+    `${BASE}/recovery-plans/${encodeURIComponent(id)}`,
+    changes
+  );
 }
-export async function updateDoctorProfile(profile) {
-  return unwrap(await api.patch(paths.profile, profile));
+
+export async function createTreatmentPlan(payload) {
+  return post(`${BASE}/recovery-plans`, payload);
+}
+
+export async function deleteTreatmentPlan(id) {
+  return remove(
+    `${BASE}/recovery-plans/${encodeURIComponent(id)}`
+  );
 }
 
 export default api;

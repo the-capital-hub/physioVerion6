@@ -1,121 +1,1940 @@
-import React, { useMemo, useState } from "react";
-import { CalendarDays, Search, Filter, Plus, Clock3, Video, MapPin, Check, X, Users, ClipboardList, ChartNoAxesCombined, UserRound, Settings, Save, ChevronRight, Activity, FileText, CircleCheck, CircleAlert, CalendarClock, Trash2 } from "lucide-react";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import {
+  Activity,
+  CalendarDays,
+  Search,
+  Filter,
+  Plus,
+  Clock3,
+  Video,
+  MapPin,
+  Check,
+  X,
+  Users,
+  ClipboardList,
+  ChartNoAxesCombined,
+  UserRound,
+  Settings,
+  Save,
+  ChevronRight,
+  CircleCheck,
+  CircleAlert,
+  FileText,
+  Trash2,
+  RefreshCw,
+} from "lucide-react";
 import "./PhysioPanel.css";
 
-const initialAppointments = [
-  { id: "APT-2048", name: "Ananya Verma", initials: "AV", treatment: "Post-knee surgery rehab", date: "2026-10-22", time: "09:30", duration: "45 min", mode: "In clinic", status: "Confirmed", tone: "blue" },
-  { id: "APT-2049", name: "Rahul Mehta", initials: "RM", treatment: "Lower back pain", date: "2026-10-22", time: "10:30", duration: "30 min", mode: "Video session", status: "Confirmed", tone: "purple" },
-  { id: "APT-2050", name: "Priya Singh", initials: "PS", treatment: "Shoulder mobility", date: "2026-10-22", time: "11:15", duration: "45 min", mode: "In clinic", status: "Awaiting", tone: "peach" },
-  { id: "APT-2051", name: "Arjun Kumar", initials: "AK", treatment: "Sports injury recovery", date: "2026-10-22", time: "12:30", duration: "60 min", mode: "In clinic", status: "Confirmed", tone: "green" },
-  { id: "APT-2052", name: "Meera Joshi", initials: "MJ", treatment: "Neck pain assessment", date: "2026-10-23", time: "14:00", duration: "45 min", mode: "Video session", status: "Awaiting", tone: "pink" },
-];
-const initialPatients = [
-  { id: "PT-1001", name: "Ananya Verma", initials: "AV", age: 29, treatment: "Post-knee surgery rehab", progress: 72, last: "20 Oct 2026", next: "Today, 9:30 AM", tone: "blue", status: "Active" },
-  { id: "PT-1002", name: "Rahul Mehta", initials: "RM", age: 42, treatment: "Lower back pain", progress: 54, last: "19 Oct 2026", next: "Today, 10:30 AM", tone: "purple", status: "Active" },
-  { id: "PT-1003", name: "Priya Singh", initials: "PS", age: 35, treatment: "Shoulder mobility", progress: 86, last: "21 Oct 2026", next: "Today, 11:15 AM", tone: "peach", status: "Active" },
-  { id: "PT-1004", name: "Arjun Kumar", initials: "AK", age: 24, treatment: "Sports injury recovery", progress: 38, last: "18 Oct 2026", next: "Today, 12:30 PM", tone: "green", status: "Needs review" },
-  { id: "PT-1005", name: "Meera Joshi", initials: "MJ", age: 51, treatment: "Neck pain assessment", progress: 61, last: "17 Oct 2026", next: "Tomorrow, 2:00 PM", tone: "pink", status: "Active" },
-];
-const initialPlans = [
-  { id: "TP-301", patient: "Ananya Verma", title: "Post-operative knee mobility", focus: "Strength & range of motion", sessions: "8 of 12 sessions", progress: 67, status: "In progress" },
-  { id: "TP-302", patient: "Rahul Mehta", title: "Lumbar stability programme", focus: "Core stability & posture", sessions: "5 of 10 sessions", progress: 50, status: "In progress" },
-  { id: "TP-303", patient: "Priya Singh", title: "Shoulder mobility restoration", focus: "Mobility & pain management", sessions: "10 of 12 sessions", progress: 83, status: "Review due" },
-  { id: "TP-304", patient: "Arjun Kumar", title: "Sports injury recovery", focus: "Strength & return to sport", sessions: "3 of 12 sessions", progress: 25, status: "In progress" },
-];
+/* =========================================================
+   API CONFIGURATION
+   ========================================================= */
 
-function PageHeader({ eyebrow, title, description, action, onAction }) {
-  return <div className="physio-page-header"><div><div className="physio-eyebrow">{eyebrow}</div><h1>{title}</h1><p>{description}</p></div>{action && <button className="physio-primary-button" onClick={onAction}><Plus size={18} />{action}</button>}</div>;
+const API_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+
+const TONES = ["blue", "purple", "peach", "green", "pink"];
+
+function getPhysioToken() {
+  const keys = ["token", "accessToken", "authToken"];
+
+  for (const key of keys) {
+    const token =
+      localStorage.getItem(key) ||
+      sessionStorage.getItem(key);
+
+    if (token) return token;
+  }
+
+  return null;
 }
-function SearchFilter({ value, onChange, placeholder = "Search..." }) {
-  return <div className="physio-list-toolbar"><label className="physio-list-search"><Search size={17} /><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} /></label><span className="physio-results-note"><Filter size={15} /> Live filter</span></div>;
+
+async function physioRequest(method, endpoint, data, options = {}) {
+  const token = getPhysioToken();
+
+  if (!token) {
+    throw new Error("Your session has expired. Please log in again.");
+  }
+
+  const response = await axios({
+    method,
+    url: `${API_URL}${endpoint}`,
+    data,
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    signal: options.signal,
+  });
+
+  return response.data;
 }
-function EmptyState({ text }) { return <div className="physio-empty-state"><Search size={22} /><p>{text}</p></div>; }
+
+function getInitials(name = "Patient") {
+  return String(name)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join("");
+}
+
+function getTone(index = 0) {
+  return TONES[index % TONES.length];
+}
+
+function formatDate(value) {
+  if (!value) return "Not scheduled";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Not scheduled";
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatTime(value) {
+  if (!value) return "Time not set";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Time not set";
+
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function isToday(value) {
+  if (!value) return false;
+
+  const date = new Date(value);
+  const today = new Date();
+
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+}
+
+function normalizeStatus(status = "") {
+  return String(status).trim().toLowerCase();
+}
+
+function getErrorMessage(error, fallback) {
+  return (
+    error?.response?.data?.message ||
+    error?.message ||
+    fallback
+  );
+}
+
+function getPlanStatus(status = "") {
+  const value = normalizeStatus(status);
+
+  if (value === "completed") return "Completed";
+  if (value === "paused") return "Paused";
+  if (value === "needs review") return "Review due";
+
+  return "In progress";
+}
+
+function getAppointmentStatus(status = "") {
+  const value = normalizeStatus(status);
+
+  if (value === "confirmed") return "Confirmed";
+  if (value === "cancelled") return "Cancelled";
+  if (value === "completed") return "Completed";
+  if (value === "awaiting") return "Pending";
+
+  return value
+    ? value.charAt(0).toUpperCase() + value.slice(1)
+    : "Pending";
+}
+
+/* =========================================================
+   SHARED COMPONENTS
+   ========================================================= */
+
+function PageHeader({
+  eyebrow,
+  title,
+  description,
+  action,
+  onAction,
+}) {
+  return (
+    <div className="physio-page-header">
+      <div>
+        <div className="physio-eyebrow">{eyebrow}</div>
+        <h1>{title}</h1>
+        <p>{description}</p>
+      </div>
+
+      {action && (
+        <button
+          className="physio-primary-button"
+          onClick={onAction}
+        >
+          <Plus size={18} />
+          {action}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function SearchFilter({
+  value,
+  onChange,
+  placeholder = "Search...",
+}) {
+  return (
+    <div className="physio-list-toolbar">
+      <label className="physio-list-search">
+        <Search size={17} />
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+        />
+      </label>
+
+      <span className="physio-results-note">
+        <Filter size={15} />
+        Live filter
+      </span>
+    </div>
+  );
+}
+
+function EmptyState({ text }) {
+  return (
+    <div className="physio-empty-state">
+      <Search size={22} />
+      <p>{text}</p>
+    </div>
+  );
+}
+
+function ApiMessage({ error, message, onDismiss, onRetry }) {
+  if (!error && !message) return null;
+
+  return (
+    <div
+      className="physio-inline-message"
+      role={error ? "alert" : "status"}
+    >
+      {error ? (
+        <CircleAlert size={16} />
+      ) : (
+        <CircleCheck size={16} />
+      )}
+
+      <span>{error || message}</span>
+
+      {error && onRetry && (
+        <button onClick={onRetry} aria-label="Retry">
+          <RefreshCw size={15} />
+        </button>
+      )}
+
+      {!error && onDismiss && (
+        <button onClick={onDismiss} aria-label="Dismiss">
+          <X size={15} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================
+   APPOINTMENTS
+   API:
+   GET   /physiotherapist-portal/appointments
+   PATCH /physiotherapist-portal/appointments/:id
+   ========================================================= */
 
 export function PhysioAppointments() {
-  const [items, setItems] = useState(initialAppointments);
+  const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
   const [message, setMessage] = useState("");
-  const filtered = items.filter(item => `${item.name} ${item.treatment} ${item.id}`.toLowerCase().includes(query.toLowerCase()) && (filter === "All" || item.status === filter));
-  function update(id, status) { setItems(old => old.map(item => item.id === id ? { ...item, status } : item)); setMessage(`Appointment ${status.toLowerCase()} in this demo view.`); }
-  return <div className="physio-page"><PageHeader eyebrow="SCHEDULE / APPOINTMENTS" title="Appointments" description="Review, confirm and keep every session on track." action="New appointment" onAction={() => setMessage("Connect your booking API to create a real appointment.")} />
-    <div className="physio-mini-stats"><div><span>Today's sessions</span><strong>{items.filter(i => i.date === "2026-10-22").length}</strong></div><div><span>Awaiting confirmation</span><strong>{items.filter(i => i.status === "Awaiting").length}</strong></div><div><span>Confirmed</span><strong>{items.filter(i => i.status === "Confirmed").length}</strong></div></div>
-    <div className="physio-panel-card"><div className="physio-list-toolbar"><label className="physio-list-search"><Search size={17} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search patient or treatment..." /></label><select className="physio-select" value={filter} onChange={e => setFilter(e.target.value)}><option>All</option><option>Confirmed</option><option>Awaiting</option><option>Cancelled</option></select></div>
-      {message && <div className="physio-inline-message"><CircleCheck size={16} />{message}<button onClick={() => setMessage("")} aria-label="Dismiss"><X size={15} /></button></div>}
-      <div className="physio-table-wrap"><table className="physio-table"><thead><tr><th>Patient / treatment</th><th>Date & time</th><th>Session type</th><th>Status</th><th>Actions</th></tr></thead><tbody>{filtered.map(item => <tr key={item.id}><td><div className="physio-patient-cell"><div className={`physio-avatar patient ${item.tone}`}>{item.initials}</div><div><strong>{item.name}</strong><span>{item.treatment} · {item.id}</span></div></div></td><td><div className="physio-time-cell"><strong>{new Date(`${item.date}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} · {item.time}</strong><span><Clock3 size={13} /> {item.duration}</span></div></td><td><span className="physio-mode"><i>{item.mode === "Video session" ? <Video size={14} /> : <MapPin size={14} />}</i>{item.mode}</span></td><td><span className={`physio-status-pill ${item.status === "Awaiting" ? "waiting" : item.status === "Cancelled" ? "cancelled" : "confirmed"}`}><i />{item.status}</span></td><td><div className="physio-action-group">{item.status === "Awaiting" ? <><button className="physio-accept-button" onClick={() => update(item.id, "Confirmed")} aria-label="Confirm appointment"><Check size={16} /></button><button className="physio-decline-button" onClick={() => update(item.id, "Cancelled")} aria-label="Cancel appointment"><X size={16} /></button></> : <button className="physio-row-action" onClick={() => setMessage(`${item.id}: ${item.name} — ${item.treatment}`)} aria-label="View appointment"><ChevronRight size={18} /></button>}</div></td></tr>)}</tbody></table>{filtered.length === 0 && <EmptyState text="No appointments match your search." />}</div>
-    </div><p className="physio-demo-disclaimer">Demo data only. Confirm/cancel changes are local to this page and are not sent to a server.</p>
-  </div>;
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState("");
+
+  const loadAppointments = useCallback(async (signal) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await physioRequest(
+        "get",
+        "/physiotherapist-portal/appointments",
+        undefined,
+        { signal }
+      );
+
+      setItems(
+        Array.isArray(result.appointments)
+          ? result.appointments
+          : []
+      );
+    } catch (err) {
+      if (err.code === "ERR_CANCELED") return;
+
+      setError(
+        getErrorMessage(err, "Unable to load appointments.")
+      );
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadAppointments(controller.signal);
+
+    return () => controller.abort();
+  }, [loadAppointments]);
+
+  const filtered = useMemo(() => {
+    return items.filter((item) => {
+      const patientName = item.patient || "Patient";
+      const treatment = item.type || "Physiotherapy session";
+
+      const matchesQuery = [
+        patientName,
+        treatment,
+        item.id,
+        item.patientEmail,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query.toLowerCase());
+
+      const status = normalizeStatus(item.status);
+
+      const matchesFilter =
+        filter === "All" ||
+        status === normalizeStatus(filter) ||
+        (filter === "Pending" && status === "awaiting");
+
+      return matchesQuery && matchesFilter;
+    });
+  }, [items, query, filter]);
+
+  const todayItems = items.filter((item) => isToday(item.time));
+
+  async function updateAppointment(id, status) {
+    try {
+      setUpdatingId(id);
+      setError("");
+      setMessage("");
+
+      await physioRequest(
+        "patch",
+        `/physiotherapist-portal/appointments/${id}`,
+        { status }
+      );
+
+      setMessage(`Appointment updated to ${status}.`);
+
+      await loadAppointments();
+    } catch (err) {
+      setError(
+        getErrorMessage(err, "Unable to update appointment.")
+      );
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
+  return (
+    <div className="physio-page">
+      <PageHeader
+        eyebrow="SCHEDULE / APPOINTMENTS"
+        title="Appointments"
+        description="Review and manage your patient sessions."
+      />
+
+      <ApiMessage
+        error={error}
+        message={message}
+        onDismiss={() => setMessage("")}
+        onRetry={() => loadAppointments()}
+      />
+
+      <div className="physio-mini-stats">
+        <div>
+          <span>Today's sessions</span>
+          <strong>{todayItems.length}</strong>
+        </div>
+
+        <div>
+          <span>Awaiting confirmation</span>
+          <strong>
+            {items.filter((item) =>
+              ["pending", "awaiting"].includes(
+                normalizeStatus(item.status)
+              )
+            ).length}
+          </strong>
+        </div>
+
+        <div>
+          <span>Confirmed</span>
+          <strong>
+            {items.filter(
+              (item) =>
+                normalizeStatus(item.status) === "confirmed"
+            ).length}
+          </strong>
+        </div>
+      </div>
+
+      <div className="physio-panel-card">
+        <div className="physio-list-toolbar">
+          <label className="physio-list-search">
+            <Search size={17} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search patient or treatment..."
+            />
+          </label>
+
+          <select
+            className="physio-select"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          >
+            <option>All</option>
+            <option>Pending</option>
+            <option>Confirmed</option>
+            <option>Completed</option>
+            <option>Cancelled</option>
+          </select>
+
+          <button
+            className="physio-icon-button"
+            onClick={() => loadAppointments()}
+            aria-label="Refresh appointments"
+          >
+            <RefreshCw size={17} />
+          </button>
+        </div>
+
+        <div className="physio-table-wrap">
+          <table className="physio-table">
+            <thead>
+              <tr>
+                <th>Patient / treatment</th>
+                <th>Date &amp; time</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filtered.map((item, index) => {
+                const patientName = item.patient || "Patient";
+                const status = getAppointmentStatus(item.status);
+
+                return (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="physio-patient-cell">
+                        <div
+                          className={`physio-avatar patient ${getTone(index)}`}
+                        >
+                          {getInitials(patientName)}
+                        </div>
+
+                        <div>
+                          <strong>{patientName}</strong>
+                          <span>
+                            {item.type || "Physiotherapy session"}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td>
+                      <div className="physio-time-cell">
+                        <strong>{formatDate(item.time)}</strong>
+                        <span>
+                          <Clock3 size={13} />
+                          {formatTime(item.time)}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td>{item.durationMinutes || 30} min</td>
+
+                    <td>
+                      <span
+                        className={`physio-status-pill ${
+                          status === "Confirmed" ||
+                          status === "Completed"
+                            ? "confirmed"
+                            : status === "Cancelled"
+                              ? "cancelled"
+                              : "waiting"
+                        }`}
+                      >
+                        <i />
+                        {status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="physio-action-group">
+                        {["Pending", "Awaiting"].includes(status) && (
+                          <>
+                            <button
+                              className="physio-accept-button"
+                              disabled={updatingId === item.id}
+                              onClick={() =>
+                                updateAppointment(item.id, "Confirmed")
+                              }
+                              aria-label="Confirm appointment"
+                            >
+                              <Check size={16} />
+                            </button>
+
+                            <button
+                              className="physio-decline-button"
+                              disabled={updatingId === item.id}
+                              onClick={() =>
+                                updateAppointment(item.id, "Cancelled")
+                              }
+                              aria-label="Cancel appointment"
+                            >
+                              <X size={16} />
+                            </button>
+                          </>
+                        )}
+
+                        {updatingId === item.id && (
+                          <span>Saving…</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {loading && <p>Loading appointments…</p>}
+
+          {!loading && filtered.length === 0 && (
+            <EmptyState text="No appointments match your search." />
+          )}
+        </div>
+      </div>
+
+      <p className="physio-demo-disclaimer">
+        Appointment records are loaded from the connected backend.
+      </p>
+    </div>
+  );
 }
+
+/* =========================================================
+   PATIENT DIRECTORY
+   API:
+   GET /physiotherapist-portal/patients
+   ========================================================= */
 
 export function PhysioPatients() {
+  const [patients, setPatients] = useState([]);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
-  const filtered = initialPatients.filter(p => `${p.name} ${p.treatment} ${p.id}`.toLowerCase().includes(query.toLowerCase()));
-  return <div className="physio-page"><PageHeader eyebrow="CARE / PATIENT DIRECTORY" title="My patients" description="A clear view of the people and recovery journeys you support." action="Add patient" onAction={() => setSelected({ name: "", treatment: "", id: "New patient" })} />
-    <div className="physio-mini-stats"><div><span>Active patients</span><strong>48</strong></div><div><span>Sessions this week</span><strong>32</strong></div><div><span>Need a review</span><strong>4</strong></div></div>
-    <div className="physio-panel-card"><SearchFilter value={query} onChange={setQuery} placeholder="Search by patient name, ID or condition..." /><div className="physio-table-wrap"><table className="physio-table"><thead><tr><th>Patient</th><th>Care focus</th><th>Recovery progress</th><th>Last session</th><th>Status</th><th /></tr></thead><tbody>{filtered.map(p => <tr key={p.id}><td><div className="physio-patient-cell"><div className={`physio-avatar patient ${p.tone}`}>{p.initials}</div><div><strong>{p.name}</strong><span>{p.id} · Age {p.age}</span></div></div></td><td><span className="physio-condition">{p.treatment}</span></td><td><div className="physio-table-progress"><div className="physio-progress-track"><span style={{ width: `${p.progress}%` }} /></div><strong>{p.progress}%</strong></div></td><td><span className="physio-muted-text">{p.last}</span></td><td><span className={`physio-status-pill ${p.status === "Needs review" ? "waiting" : "confirmed"}`}><i />{p.status}</span></td><td><button className="physio-row-action" onClick={() => setSelected(p)} aria-label={`View ${p.name}`}><ChevronRight size={18} /></button></td></tr>)}</tbody></table>{filtered.length === 0 && <EmptyState text="No patients match your search." />}</div></div>
-    {selected && <div className="physio-modal-backdrop" role="presentation" onClick={() => setSelected(null)}><section className="physio-modal" role="dialog" aria-modal="true" aria-label="Patient details" onClick={e => e.stopPropagation()}><button className="physio-modal-close" onClick={() => setSelected(null)} aria-label="Close"><X size={19} /></button><div className="physio-modal-avatar"><UserRound size={25} /></div><h2>{selected.name || "Add patient"}</h2><p>{selected.id}</p>{selected.treatment && <><div className="physio-modal-detail"><span>Care focus</span><strong>{selected.treatment}</strong></div><div className="physio-modal-detail"><span>Recovery progress</span><strong>{selected.progress}%</strong></div><div className="physio-modal-detail"><span>Next appointment</span><strong>{selected.next}</strong></div></>}<p className="physio-demo-disclaimer">Demo patient record. Connect the backend to load real clinical data.</p></section></div>}
-  </div>;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadPatients = useCallback(async (signal) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await physioRequest(
+        "get",
+        "/physiotherapist-portal/patients",
+        undefined,
+        { signal }
+      );
+
+      setPatients(
+        Array.isArray(result.patients) ? result.patients : []
+      );
+    } catch (err) {
+      if (err.code === "ERR_CANCELED") return;
+
+      setError(
+        getErrorMessage(err, "Unable to load patient records.")
+      );
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadPatients(controller.signal);
+
+    return () => controller.abort();
+  }, [loadPatients]);
+
+  const filtered = useMemo(() => {
+    return patients.filter((patient) =>
+      [
+        patient.name,
+        patient.email,
+        patient.condition,
+        patient.plan,
+        patient.status,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query.toLowerCase())
+    );
+  }, [patients, query]);
+
+  return (
+    <div className="physio-page">
+      <PageHeader
+        eyebrow="CARE / PATIENT DIRECTORY"
+        title="My patients"
+        description="View patients assigned to your care and their recovery progress."
+      />
+
+      <ApiMessage
+        error={error}
+        onRetry={() => loadPatients()}
+      />
+
+      <div className="physio-mini-stats">
+        <div>
+          <span>Assigned patients</span>
+          <strong>{patients.length}</strong>
+        </div>
+
+        <div>
+          <span>Active plans</span>
+          <strong>
+            {patients.filter(
+              (patient) =>
+                normalizeStatus(patient.status) === "active"
+            ).length}
+          </strong>
+        </div>
+
+        <div>
+          <span>Need review</span>
+          <strong>
+            {patients.filter(
+              (patient) =>
+                normalizeStatus(patient.status) === "needs review"
+            ).length}
+          </strong>
+        </div>
+      </div>
+
+      <div className="physio-panel-card">
+        <SearchFilter
+          value={query}
+          onChange={setQuery}
+          placeholder="Search patient name, email or condition..."
+        />
+
+        <div className="physio-table-wrap">
+          <table className="physio-table">
+            <thead>
+              <tr>
+                <th>Patient</th>
+                <th>Care focus</th>
+                <th>Recovery progress</th>
+                <th>Next review</th>
+                <th>Status</th>
+                <th />
+              </tr>
+            </thead>
+
+            <tbody>
+              {filtered.map((patient, index) => (
+                <tr key={patient.id}>
+                  <td>
+                    <div className="physio-patient-cell">
+                      <div
+                        className={`physio-avatar patient ${getTone(index)}`}
+                      >
+                        {getInitials(patient.name)}
+                      </div>
+
+                      <div>
+                        <strong>{patient.name}</strong>
+                        <span>{patient.email || patient.id}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span className="physio-condition">
+                      {patient.condition || patient.plan || "Not specified"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <div className="physio-table-progress">
+                      <div className="physio-progress-track">
+                        <span
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              Math.max(
+                                0,
+                                Number(patient.progress) || 0
+                              )
+                            )}%`,
+                          }}
+                        />
+                      </div>
+
+                      <strong>{patient.progress ?? 0}%</strong>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span className="physio-muted-text">
+                      {formatDate(patient.nextReview)}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      className={`physio-status-pill ${
+                        normalizeStatus(patient.status) === "needs review"
+                          ? "waiting"
+                          : "confirmed"
+                      }`}
+                    >
+                      <i />
+                      {patient.status || "No plan"}
+                    </span>
+                  </td>
+
+                  <td>
+                    <button
+                      className="physio-row-action"
+                      onClick={() => setSelected(patient)}
+                      aria-label={`View ${patient.name}`}
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {loading && <p>Loading patient records…</p>}
+
+          {!loading && filtered.length === 0 && (
+            <EmptyState text="No assigned patients match your search." />
+          )}
+        </div>
+      </div>
+
+      {selected && (
+        <div
+          className="physio-modal-backdrop"
+          role="presentation"
+          onClick={() => setSelected(null)}
+        >
+          <section
+            className="physio-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Patient details"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="physio-modal-close"
+              onClick={() => setSelected(null)}
+              aria-label="Close"
+            >
+              <X size={19} />
+            </button>
+
+            <div className="physio-modal-avatar">
+              <UserRound size={25} />
+            </div>
+
+            <h2>{selected.name}</h2>
+            <p>{selected.email || selected.id}</p>
+
+            <div className="physio-modal-detail">
+              <span>Care focus</span>
+              <strong>{selected.condition || "Not specified"}</strong>
+            </div>
+
+            <div className="physio-modal-detail">
+              <span>Recovery plan</span>
+              <strong>{selected.plan || "No recovery plan"}</strong>
+            </div>
+
+            <div className="physio-modal-detail">
+              <span>Recovery progress</span>
+              <strong>{selected.progress ?? 0}%</strong>
+            </div>
+
+            <div className="physio-modal-detail">
+              <span>Next review</span>
+              <strong>{formatDate(selected.nextReview)}</strong>
+            </div>
+          </section>
+        </div>
+      )}
+
+      <p className="physio-demo-disclaimer">
+        Patient information is loaded from the physiotherapist API.
+      </p>
+    </div>
+  );
 }
+
+/* =========================================================
+   TREATMENT PLANS
+   API:
+   GET    /physiotherapist-portal/recovery-plans
+   POST   /physiotherapist-portal/recovery-plans
+   PATCH  /physiotherapist-portal/recovery-plans/:id
+   DELETE /physiotherapist-portal/recovery-plans/:id
+   ========================================================= */
 
 export function PhysioTreatmentPlans() {
+  const [plans, setPlans] = useState([]);
   const [query, setQuery] = useState("");
-  const [plans, setPlans] = useState(initialPlans);
   const [message, setMessage] = useState("");
-  const filtered = plans.filter(p => `${p.patient} ${p.title} ${p.focus}`.toLowerCase().includes(query.toLowerCase()));
-  return <div className="physio-page"><PageHeader eyebrow="CARE / CLINICAL PLANNING" title="Treatment plans" description="Track care goals, treatment milestones and plan reviews." action="Create plan" onAction={() => setMessage("A real treatment-plan form will need to be connected to your backend API.")} />
-    {message && <div className="physio-inline-message"><CircleAlert size={16} />{message}<button onClick={() => setMessage("")} aria-label="Dismiss"><X size={15} /></button></div>}
-    <div className="physio-plan-grid">{filtered.map(plan => <article className="physio-panel-card physio-plan-card" key={plan.id}><div className="physio-plan-top"><span className="physio-plan-icon"><ClipboardList size={20} /></span><span className={`physio-status-pill ${plan.status === "Review due" ? "waiting" : "confirmed"}`}><i />{plan.status}</span></div><span className="physio-plan-id">{plan.id}</span><h2>{plan.title}</h2><p className="physio-plan-focus">{plan.focus}</p><div className="physio-plan-patient"><span className="physio-avatar patient blue">{plan.patient.split(" ").map(s => s[0]).join("")}</span><strong>{plan.patient}</strong></div><div className="physio-progress-meta"><span>Plan completion</span><strong>{plan.progress}%</strong></div><div className="physio-progress-track"><span style={{ width: `${plan.progress}%` }} /></div><div className="physio-plan-foot"><span>{plan.sessions}</span><button onClick={() => { setPlans(old => old.map(p => p.id === plan.id ? { ...p, status: p.status === "Review due" ? "In progress" : "Review due" } : p)); setMessage(`${plan.id} status changed locally for this demo.`); }}>Mark for review <ChevronRight size={15} /></button></div></article>)}</div>{filtered.length === 0 && <div className="physio-panel-card"><EmptyState text="No treatment plans match your search." /></div>}
-    <p className="physio-demo-disclaimer">Treatment plans shown are illustrative examples, not clinical advice or live patient data.</p>
-  </div>;
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState("");
+
+  const [showForm, setShowForm] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [form, setForm] = useState({
+    patientId: "",
+    title: "",
+    clinicalNotes: "",
+    goals: "",
+    status: "Active",
+    progress: "0",
+    reviewDate: "",
+    exercises: [],
+  });
+
+  const loadPlans = useCallback(async (signal) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await physioRequest(
+        "get",
+        "/physiotherapist-portal/recovery-plans",
+        undefined,
+        { signal }
+      );
+
+      setPlans(Array.isArray(result.plans) ? result.plans : []);
+    } catch (err) {
+      if (err.code === "ERR_CANCELED") return;
+
+      setError(
+        getErrorMessage(err, "Unable to load recovery plans.")
+      );
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadPlans(controller.signal);
+
+    return () => controller.abort();
+  }, [loadPlans]);
+
+  async function openCreateForm() {
+    setError("");
+    setMessage("");
+
+    try {
+      const result = await physioRequest(
+        "get",
+        "/physiotherapist-portal/patients"
+      );
+
+      const availablePatients = Array.isArray(result.patients)
+        ? result.patients
+        : [];
+
+      setPatients(availablePatients);
+
+      setForm({
+        patientId: availablePatients[0]?.id || "",
+        title: "",
+        clinicalNotes: "",
+        goals: "",
+        status: "Active",
+        progress: "0",
+        reviewDate: "",
+        exercises: [],
+      });
+
+      setShowForm(true);
+    } catch (err) {
+      setError(
+        getErrorMessage(err, "Unable to load patients for the plan.")
+      );
+    }
+  }
+
+  async function createPlan(event) {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+
+    if (!form.patientId) {
+      setError("Select a patient before creating a plan.");
+      return;
+    }
+
+    if (!form.title.trim()) {
+      setError("Plan title is required.");
+      return;
+    }
+
+    const payload = {
+      patientId: form.patientId,
+      title: form.title.trim(),
+      clinicalNotes: form.clinicalNotes.trim(),
+      goals: form.goals
+        .split("\n")
+        .map((goal) => goal.trim())
+        .filter(Boolean),
+      status: form.status,
+      progress: Number(form.progress),
+      reviewDate: form.reviewDate || undefined,
+      exercises: form.exercises,
+    };
+
+    try {
+      setBusyId("create");
+
+      const result = await physioRequest(
+        "post",
+        "/physiotherapist-portal/recovery-plans",
+        payload
+      );
+
+      if (result.plan) {
+        setPlans((previous) => [result.plan, ...previous]);
+      } else {
+        await loadPlans();
+      }
+
+      setShowForm(false);
+      setMessage("Recovery plan created successfully.");
+    } catch (err) {
+      setError(
+        getErrorMessage(err, "Unable to create recovery plan.")
+      );
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function toggleReview(plan) {
+    const nextStatus =
+      plan.status === "Needs review" ? "Active" : "Needs review";
+
+    try {
+      setBusyId(plan.id);
+      setError("");
+      setMessage("");
+
+      await physioRequest(
+        "patch",
+        `/physiotherapist-portal/recovery-plans/${plan.id}`,
+        { status: nextStatus }
+      );
+
+      setMessage(`Plan status updated to ${nextStatus}.`);
+      await loadPlans();
+    } catch (err) {
+      setError(
+        getErrorMessage(err, "Unable to update the recovery plan.")
+      );
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function deletePlan(plan) {
+    const confirmed = window.confirm(
+      `Delete the recovery plan "${plan.title}"?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setBusyId(plan.id);
+      setError("");
+      setMessage("");
+
+      await physioRequest(
+        "delete",
+        `/physiotherapist-portal/recovery-plans/${plan.id}`
+      );
+
+      setPlans((previous) =>
+        previous.filter((item) => item.id !== plan.id)
+      );
+
+      setMessage("Recovery plan deleted.");
+    } catch (err) {
+      setError(
+        getErrorMessage(err, "Unable to delete recovery plan.")
+      );
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  const filtered = plans.filter((plan) =>
+    [
+      plan.patient,
+      plan.title,
+      plan.clinicalNotes,
+      ...(plan.goals || []),
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(query.toLowerCase())
+  );
+
+  return (
+    <div className="physio-page">
+      <PageHeader
+        eyebrow="CARE / CLINICAL PLANNING"
+        title="Treatment plans"
+        description="Create and manage patient recovery goals."
+        action="Create plan"
+        onAction={openCreateForm}
+      />
+
+      <ApiMessage
+        error={error}
+        message={message}
+        onDismiss={() => setMessage("")}
+        onRetry={() => loadPlans()}
+      />
+
+      {showForm && (
+        <form
+          className="physio-panel-card physio-profile-form"
+          onSubmit={createPlan}
+        >
+          <div className="physio-section-heading">
+            <div>
+              <h2>Create recovery plan</h2>
+              <p>Save a new plan for an assigned patient.</p>
+            </div>
+
+            <button
+              type="button"
+              className="physio-icon-button"
+              onClick={() => setShowForm(false)}
+              aria-label="Close form"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="physio-form-grid">
+            <label>
+              Patient
+              <select
+                required
+                value={form.patientId}
+                onChange={(event) =>
+                  setForm((old) => ({
+                    ...old,
+                    patientId: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Select patient</option>
+                {patients.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.name} {patient.email ? `(${patient.email})` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Plan title
+              <input
+                required
+                maxLength={120}
+                value={form.title}
+                onChange={(event) =>
+                  setForm((old) => ({
+                    ...old,
+                    title: event.target.value,
+                  }))
+                }
+                placeholder="e.g. Knee mobility recovery"
+              />
+            </label>
+
+            <label className="physio-form-full">
+              Clinical notes
+              <textarea
+                rows="3"
+                maxLength={4000}
+                value={form.clinicalNotes}
+                onChange={(event) =>
+                  setForm((old) => ({
+                    ...old,
+                    clinicalNotes: event.target.value,
+                  }))
+                }
+                placeholder="Enter relevant care notes..."
+              />
+            </label>
+
+            <label className="physio-form-full">
+              Recovery goals
+              <textarea
+                rows="3"
+                value={form.goals}
+                onChange={(event) =>
+                  setForm((old) => ({
+                    ...old,
+                    goals: event.target.value,
+                  }))
+                }
+                placeholder={"Enter one goal per line"}
+              />
+            </label>
+
+            <label>
+              Status
+              <select
+                value={form.status}
+                onChange={(event) =>
+                  setForm((old) => ({
+                    ...old,
+                    status: event.target.value,
+                  }))
+                }
+              >
+                <option>Active</option>
+                <option>Needs review</option>
+                <option>Paused</option>
+                <option>Completed</option>
+              </select>
+            </label>
+
+            <label>
+              Progress (%)
+              <input
+                type="number"
+                min="0"
+                max="100"
+                required
+                value={form.progress}
+                onChange={(event) =>
+                  setForm((old) => ({
+                    ...old,
+                    progress: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            <label>
+              Review date
+              <input
+                type="date"
+                value={form.reviewDate}
+                onChange={(event) =>
+                  setForm((old) => ({
+                    ...old,
+                    reviewDate: event.target.value,
+                  }))
+                }
+              />
+            </label>
+          </div>
+
+          <div className="physio-form-footer">
+            <button
+              type="button"
+              className="physio-outline-button"
+              onClick={() => setShowForm(false)}
+            >
+              Cancel
+            </button>
+
+            <button
+              className="physio-primary-button"
+              type="submit"
+              disabled={busyId === "create"}
+            >
+              <Save size={17} />
+              {busyId === "create" ? "Saving…" : "Save plan"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div className="physio-panel-card">
+        <SearchFilter
+          value={query}
+          onChange={setQuery}
+          placeholder="Search patient or recovery plan..."
+        />
+      </div>
+
+      <div className="physio-plan-grid">
+        {filtered.map((plan) => {
+          const status = getPlanStatus(plan.status);
+          const goals = Array.isArray(plan.goals) ? plan.goals : [];
+
+          return (
+            <article
+              className="physio-panel-card physio-plan-card"
+              key={plan.id}
+            >
+              <div className="physio-plan-top">
+                <span className="physio-plan-icon">
+                  <ClipboardList size={20} />
+                </span>
+
+                <span
+                  className={`physio-status-pill ${
+                    status === "Review due" ? "waiting" : "confirmed"
+                  }`}
+                >
+                  <i />
+                  {status}
+                </span>
+              </div>
+
+              <span className="physio-plan-id">
+                {String(plan.id).slice(-8)}
+              </span>
+
+              <h2>{plan.title}</h2>
+
+              <p className="physio-plan-focus">
+                {plan.clinicalNotes || goals[0] || "Recovery plan"}
+              </p>
+
+              <div className="physio-plan-patient">
+                <span className="physio-avatar patient blue">
+                  {getInitials(plan.patient)}
+                </span>
+                <strong>{plan.patient || "Patient"}</strong>
+              </div>
+
+              {goals.length > 0 && (
+                <div className="physio-plan-focus">
+                  <strong>Goals</strong>
+                  <ul>
+                    {goals.slice(0, 3).map((goal, index) => (
+                      <li key={`${plan.id}-goal-${index}`}>{goal}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="physio-progress-meta">
+                <span>Plan progress</span>
+                <strong>{plan.progress ?? 0}%</strong>
+              </div>
+
+              <div className="physio-progress-track">
+                <span
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Math.max(0, Number(plan.progress) || 0)
+                    )}%`,
+                  }}
+                />
+              </div>
+
+              <div className="physio-plan-foot">
+                <span>
+                  Review: {formatDate(plan.reviewDate)}
+                </span>
+
+                <button
+                  disabled={busyId === plan.id}
+                  onClick={() => toggleReview(plan)}
+                >
+                  {plan.status === "Needs review"
+                    ? "Mark active"
+                    : "Mark for review"}
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+
+              <button
+                className="physio-decline-button"
+                disabled={busyId === plan.id}
+                onClick={() => deletePlan(plan)}
+                aria-label={`Delete ${plan.title}`}
+              >
+                <Trash2 size={15} />
+                Delete plan
+              </button>
+            </article>
+          );
+        })}
+      </div>
+
+      {loading && <p>Loading recovery plans…</p>}
+
+      {!loading && filtered.length === 0 && (
+        <div className="physio-panel-card">
+          <EmptyState text="No recovery plans found. Create a plan for an assigned patient." />
+        </div>
+      )}
+
+      <p className="physio-demo-disclaimer">
+        Recovery plans are loaded from and saved to the backend.
+      </p>
+    </div>
+  );
 }
+
+/* =========================================================
+   PROGRESS REPORTS
+   Uses actual recovery plan progress.
+   ========================================================= */
 
 export function PhysioProgress() {
-  const [period, setPeriod] = useState("6 months");
-  const data = period === "6 months" ? [34, 42, 39, 55, 63, 72] : period === "3 months" ? [49, 61, 72] : [63, 72];
-  const labels = period === "6 months" ? ["May", "Jun", "Jul", "Aug", "Sep", "Oct"] : period === "3 months" ? ["Aug", "Sep", "Oct"] : ["Sep", "Oct"];
-  return <div className="physio-page"><PageHeader eyebrow="INSIGHTS / OUTCOMES" title="Progress reports" description="Review recovery trends and follow-up priorities across your caseload." />
-    <div className="physio-mini-stats"><div><span>Average recovery</span><strong>68%</strong></div><div><span>Goals achieved</span><strong>86</strong></div><div><span>Patients improving</span><strong>91%</strong></div></div>
-    <div className="physio-bottom-grid"><section className="physio-panel-card physio-report-chart"><div className="physio-section-heading"><div><h2>Recovery trend</h2><p>Illustrative average recovery score</p></div><select className="physio-select" value={period} onChange={e => setPeriod(e.target.value)}><option>6 months</option><option>3 months</option><option>2 months</option></select></div><div className="physio-chart-area"><div className="physio-chart-y"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div className="physio-chart-main"><div className="physio-chart-gridlines"><i /><i /><i /><i /><i /></div><div className="physio-chart-bars">{data.map((v, i) => <div className="physio-chart-bar-wrap" key={labels[i]}><div className="physio-chart-bar" style={{ height: `${v}%` }} title={`${v}%`}><span>{v}%</span></div><small>{labels[i]}</small></div>)}</div></div></div></section>
-      <section className="physio-panel-card physio-report-highlights"><div className="physio-section-heading"><div><h2>Clinical highlights</h2><p>Example follow-up priorities</p></div></div><div className="physio-highlight"><span className="highlight-icon green"><CircleCheck size={18} /></span><div><strong>Recovery milestones met</strong><p>3 sample patients reached a target this week.</p></div></div><div className="physio-highlight"><span className="highlight-icon orange"><CircleAlert size={18} /></span><div><strong>Follow-up recommended</strong><p>4 sample records may need a progress review.</p></div></div><div className="physio-highlight"><span className="highlight-icon blue"><Activity size={18} /></span><div><strong>Exercise adherence</strong><p>Sample adherence trend is stable this month.</p></div></div></section></div>
-    <p className="physio-demo-disclaimer">All charts and metrics are demo illustrations. Do not use for medical decisions.</p>
-  </div>;
+  const [plans, setPlans] = useState([]);
+  const [period, setPeriod] = useState("All plans");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadPlans = useCallback(async (signal) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await physioRequest(
+        "get",
+        "/physiotherapist-portal/recovery-plans",
+        undefined,
+        { signal }
+      );
+
+      setPlans(Array.isArray(result.plans) ? result.plans : []);
+    } catch (err) {
+      if (err.code === "ERR_CANCELED") return;
+
+      setError(
+        getErrorMessage(err, "Unable to load progress reports.")
+      );
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadPlans(controller.signal);
+
+    return () => controller.abort();
+  }, [loadPlans]);
+
+  const averageProgress = plans.length
+    ? Math.round(
+        plans.reduce(
+          (total, plan) => total + (Number(plan.progress) || 0),
+          0
+        ) / plans.length
+      )
+    : 0;
+
+  const completedPlans = plans.filter(
+    (plan) => normalizeStatus(plan.status) === "completed"
+  ).length;
+
+  const needsReview = plans.filter(
+    (plan) => normalizeStatus(plan.status) === "needs review"
+  ).length;
+
+  const buckets = [
+    { label: "0 to 24%", min: 0, max: 24 },
+    { label: "25 to 49%", min: 25, max: 49 },
+    { label: "50 to 74%", min: 50, max: 74 },
+    { label: "75 to 100%", min: 75, max: 100 },
+  ];
+
+  const distribution = buckets.map((bucket) => ({
+    ...bucket,
+    count: plans.filter((plan) => {
+      const progress = Number(plan.progress) || 0;
+      return progress >= bucket.min && progress <= bucket.max;
+    }).length,
+  }));
+
+  return (
+    <div className="physio-page">
+      <PageHeader
+        eyebrow="INSIGHTS / OUTCOMES"
+        title="Progress reports"
+        description="Review recorded recovery progress and treatment priorities."
+      />
+
+      <ApiMessage error={error} onRetry={() => loadPlans()} />
+
+      <div className="physio-mini-stats">
+        <div>
+          <span>Average recovery</span>
+          <strong>{loading ? "…" : `${averageProgress}%`}</strong>
+        </div>
+
+        <div>
+          <span>Completed plans</span>
+          <strong>{loading ? "…" : completedPlans}</strong>
+        </div>
+
+        <div>
+          <span>Need review</span>
+          <strong>{loading ? "…" : needsReview}</strong>
+        </div>
+      </div>
+
+      <div className="physio-bottom-grid">
+        <section className="physio-panel-card physio-report-chart">
+          <div className="physio-section-heading">
+            <div>
+              <h2>Recovery distribution</h2>
+              <p>Patients grouped by recorded plan progress</p>
+            </div>
+
+            <select
+              className="physio-select"
+              value={period}
+              onChange={(event) => setPeriod(event.target.value)}
+            >
+              <option>All plans</option>
+            </select>
+          </div>
+
+          <div className="physio-chart-area">
+            <div className="physio-chart-y">
+              <span>{plans.length}</span>
+              <span>{Math.ceil(plans.length * 0.75)}</span>
+              <span>{Math.ceil(plans.length * 0.5)}</span>
+              <span>{Math.ceil(plans.length * 0.25)}</span>
+              <span>0</span>
+            </div>
+
+            <div className="physio-chart-main">
+              <div className="physio-chart-gridlines">
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+              </div>
+
+              <div className="physio-chart-bars">
+                {distribution.map((bucket) => (
+                  <div
+                    className="physio-chart-bar-wrap"
+                    key={bucket.label}
+                  >
+                    <div
+                      className="physio-chart-bar"
+                      style={{
+                        height: `${
+                          plans.length
+                            ? Math.max(
+                                4,
+                                (bucket.count / plans.length) * 100
+                              )
+                            : 4
+                        }%`,
+                      }}
+                      title={`${bucket.count} plans`}
+                    >
+                      <span>{bucket.count}</span>
+                    </div>
+
+                    <small>{bucket.label}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="physio-panel-card physio-report-highlights">
+          <div className="physio-section-heading">
+            <div>
+              <h2>Clinical highlights</h2>
+              <p>Based on saved recovery plans</p>
+            </div>
+          </div>
+
+          <div className="physio-highlight">
+            <span className="highlight-icon green">
+              <CircleCheck size={18} />
+            </span>
+
+            <div>
+              <strong>Completed plans</strong>
+              <p>{completedPlans} plans marked completed.</p>
+            </div>
+          </div>
+
+          <div className="physio-highlight">
+            <span className="highlight-icon orange">
+              <CircleAlert size={18} />
+            </span>
+
+            <div>
+              <strong>Follow-up recommended</strong>
+              <p>{needsReview} plans marked for review.</p>
+            </div>
+          </div>
+
+          <div className="physio-highlight">
+            <span className="highlight-icon blue">
+              <Activity size={18} />
+            </span>
+
+            <div>
+              <strong>Recorded plans</strong>
+              <p>{plans.length} recovery plans in your workspace.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {loading && <p>Loading progress reports…</p>}
+
+      <p className="physio-demo-disclaimer">
+        Progress figures reflect values saved in recovery plans.
+        They are not an independent clinical assessment.
+      </p>
+    </div>
+  );
 }
+
+/* =========================================================
+   AVAILABILITY
+   No availability API was provided.
+   This page intentionally saves locally.
+   ========================================================= */
+
+const DEFAULT_DAYS = [
+  { day: "Monday", enabled: true, start: "09:00", end: "17:00" },
+  { day: "Tuesday", enabled: true, start: "09:00", end: "17:00" },
+  { day: "Wednesday", enabled: true, start: "10:00", end: "18:00" },
+  { day: "Thursday", enabled: true, start: "09:00", end: "17:00" },
+  { day: "Friday", enabled: true, start: "09:00", end: "16:00" },
+  { day: "Saturday", enabled: false, start: "10:00", end: "14:00" },
+  { day: "Sunday", enabled: false, start: "10:00", end: "14:00" },
+];
 
 export function PhysioSchedule() {
-  const [days, setDays] = useState([{ day: "Monday", enabled: true, start: "09:00", end: "17:00" }, { day: "Tuesday", enabled: true, start: "09:00", end: "17:00" }, { day: "Wednesday", enabled: true, start: "10:00", end: "18:00" }, { day: "Thursday", enabled: true, start: "09:00", end: "17:00" }, { day: "Friday", enabled: true, start: "09:00", end: "16:00" }, { day: "Saturday", enabled: false, start: "10:00", end: "14:00" }, { day: "Sunday", enabled: false, start: "10:00", end: "14:00" }]);
+  const [days, setDays] = useState(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("physioAvailability") || "null"
+      ) || DEFAULT_DAYS;
+    } catch {
+      return DEFAULT_DAYS;
+    }
+  });
+
   const [saved, setSaved] = useState(false);
-  function change(index, key, value) { setDays(old => old.map((d, i) => i === index ? { ...d, [key]: value } : d)); setSaved(false); }
-  function save() { localStorage.setItem("physioAvailability", JSON.stringify(days)); setSaved(true); }
-  return <div className="physio-page"><PageHeader eyebrow="SCHEDULE / AVAILABILITY" title="Availability" description="Set the hours when patients can request a session with you." />
-    <div className="physio-panel-card physio-schedule-card"><div className="physio-section-heading"><div><h2>Weekly working hours</h2><p>Choose the days and times you are available.</p></div><span className="physio-local-save">Saved on this device</span></div>
-      {days.map((day, index) => <div className={`physio-day-row ${day.enabled ? "" : "day-disabled"}`} key={day.day}><label className="physio-day-toggle"><input type="checkbox" checked={day.enabled} onChange={e => change(index, "enabled", e.target.checked)} /><span className="physio-switch" /><strong>{day.day}</strong></label>{day.enabled ? <div className="physio-time-inputs"><label><span>Start</span><input type="time" value={day.start} onChange={e => change(index, "start", e.target.value)} /></label><span className="physio-time-dash">—</span><label><span>End</span><input type="time" value={day.end} onChange={e => change(index, "end", e.target.value)} /></label></div> : <span className="physio-day-off">Unavailable</span>}</div>)}
-      <div className="physio-schedule-footer">{saved && <span className="physio-saved-message"><CircleCheck size={16} /> Availability saved locally</span>}<button className="physio-primary-button" onClick={save}><Save size={17} /> Save availability</button></div>
-    </div><p className="physio-demo-disclaimer">Availability is stored in this browser only. Connect your API to publish it to patient booking.</p>
-  </div>;
+
+  function change(index, key, value) {
+    setDays((previous) =>
+      previous.map((day, currentIndex) =>
+        currentIndex === index
+          ? { ...day, [key]: value }
+          : day
+      )
+    );
+
+    setSaved(false);
+  }
+
+  function save(event) {
+    event.preventDefault();
+    localStorage.setItem("physioAvailability", JSON.stringify(days));
+    setSaved(true);
+  }
+
+  return (
+    <div className="physio-page">
+      <PageHeader
+        eyebrow="SCHEDULE / AVAILABILITY"
+        title="Availability"
+        description="Set your preferred weekly working hours."
+      />
+
+      <form
+        className="physio-panel-card physio-schedule-card"
+        onSubmit={save}
+      >
+        <div className="physio-section-heading">
+          <div>
+            <h2>Weekly working hours</h2>
+            <p>Choose the days and times you are available.</p>
+          </div>
+
+          <span className="physio-local-save">Local settings</span>
+        </div>
+
+        {days.map((day, index) => (
+          <div
+            className={`physio-day-row ${
+              day.enabled ? "" : "day-disabled"
+            }`}
+            key={day.day}
+          >
+            <label className="physio-day-toggle">
+              <input
+                type="checkbox"
+                checked={day.enabled}
+                onChange={(event) =>
+                  change(index, "enabled", event.target.checked)
+                }
+              />
+
+              <span className="physio-switch" />
+              <strong>{day.day}</strong>
+            </label>
+
+            {day.enabled ? (
+              <div className="physio-time-inputs">
+                <label>
+                  <span>Start</span>
+                  <input
+                    type="time"
+                    value={day.start}
+                    onChange={(event) =>
+                      change(index, "start", event.target.value)
+                    }
+                  />
+                </label>
+
+                <span className="physio-time-dash">to</span>
+
+                <label>
+                  <span>End</span>
+                  <input
+                    type="time"
+                    value={day.end}
+                    onChange={(event) =>
+                      change(index, "end", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+            ) : (
+              <span className="physio-day-off">Unavailable</span>
+            )}
+          </div>
+        ))}
+
+        <div className="physio-schedule-footer">
+          {saved && (
+            <span className="physio-saved-message">
+              <CircleCheck size={16} />
+              Availability saved on this device
+            </span>
+          )}
+
+          <button className="physio-primary-button" type="submit">
+            <Save size={17} />
+            Save availability
+          </button>
+        </div>
+      </form>
+
+      <p className="physio-demo-disclaimer">
+        Availability is saved in this browser only. A backend endpoint
+        is required to publish it to patient booking.
+      </p>
+    </div>
+  );
 }
+
+/* =========================================================
+   PROFESSIONAL PROFILE
+   GET /physiotherapist-portal/profile
+   Profile editing requires an update endpoint.
+   ========================================================= */
 
 export function PhysioProfile() {
-  const existing = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch { return {}; } })();
-  const [form, setForm] = useState({ name: existing.name || existing.fullName || "", email: existing.email || "", phone: existing.phone || "", specialty: existing.specialty || "Musculoskeletal physiotherapy", experience: existing.experience || "5", bio: existing.bio || "" });
-  const [saved, setSaved] = useState(false);
-  function update(key, value) { setForm(old => ({ ...old, [key]: value })); setSaved(false); }
-  function save(e) { e.preventDefault(); const user = { ...existing, ...form }; localStorage.setItem("user", JSON.stringify(user)); setSaved(true); }
-  return <div className="physio-page"><PageHeader eyebrow="ACCOUNT / PROFESSIONAL DETAILS" title="My profile" description="Keep your professional information accurate and up to date." />
-    <form className="physio-panel-card physio-profile-form" onSubmit={save}><div className="physio-profile-banner"><div className="physio-profile-big-avatar"><UserRound size={34} /></div><div><h2>Professional profile</h2><p>Your details help patients understand your care experience.</p></div></div><div className="physio-form-grid">
-      <label>Full name<input required minLength={2} value={form.name} onChange={e => update("name", e.target.value)} placeholder="Dr. A. Sharma" /></label><label>Email address<input type="email" value={form.email} onChange={e => update("email", e.target.value)} placeholder="doctor@example.com" /></label><label>Phone number<input type="tel" value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="+91 98765 43210" /></label><label>Specialty<input value={form.specialty} onChange={e => update("specialty", e.target.value)} placeholder="Your specialty" /></label><label>Years of experience<input type="number" min="0" max="60" value={form.experience} onChange={e => update("experience", e.target.value)} /></label><label className="physio-form-full">Professional bio<textarea rows="4" maxLength="600" value={form.bio} onChange={e => update("bio", e.target.value)} placeholder="Share your approach to patient care and areas of expertise..." /></label>
-    </div><div className="physio-form-footer">{saved && <span className="physio-saved-message"><CircleCheck size={16} /> Profile saved on this device</span>}<button className="physio-primary-button" type="submit"><Save size={17} /> Save profile</button></div></form><p className="physio-demo-disclaimer">This saves to browser local storage. It does not update the backend account.</p>
-  </div>;
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    specialization: "",
+  });
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadProfile = useCallback(async (signal) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await physioRequest(
+        "get",
+        "/physiotherapist-portal/profile",
+        undefined,
+        { signal }
+      );
+
+      const profile = result.profile || {};
+
+      setForm({
+        name: profile.name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        specialization: profile.specialization || "",
+      });
+    } catch (err) {
+      if (err.code === "ERR_CANCELED") return;
+
+      setError(
+        getErrorMessage(err, "Unable to load your profile.")
+      );
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadProfile(controller.signal);
+
+    return () => controller.abort();
+  }, [loadProfile]);
+
+  return (
+    <div className="physio-page">
+      <PageHeader
+        eyebrow="ACCOUNT / PROFESSIONAL DETAILS"
+        title="My profile"
+        description="View your professional information from your account."
+      />
+
+      <ApiMessage error={error} onRetry={() => loadProfile()} />
+
+      <section className="physio-panel-card physio-profile-form">
+        <div className="physio-profile-banner">
+          <div className="physio-profile-big-avatar">
+            <UserRound size={34} />
+          </div>
+
+          <div>
+            <h2>Professional profile</h2>
+            <p>Your information from the Rehabics account.</p>
+          </div>
+        </div>
+
+        {loading ? (
+          <p>Loading profile…</p>
+        ) : (
+          <div className="physio-form-grid">
+            <label>
+              Full name
+              <input value={form.name} readOnly />
+            </label>
+
+            <label>
+              Email address
+              <input value={form.email} readOnly />
+            </label>
+
+            <label>
+              Phone number
+              <input value={form.phone} readOnly />
+            </label>
+
+            <label>
+              Specialization
+              <input value={form.specialization} readOnly />
+            </label>
+          </div>
+        )}
+      </section>
+
+      <p className="physio-demo-disclaimer">
+        Profile data is loaded from the backend. Editing requires a
+        profile update endpoint, which has not been provided yet.
+      </p>
+    </div>
+  );
 }
 
+/* =========================================================
+   SETTINGS
+   No backend settings endpoint was provided.
+   ========================================================= */
+
 export function PhysioSettings() {
-  const [prefs, setPrefs] = useState(() => { try { return { emailReminders: true, appointmentAlerts: true, progressDigest: false, compactMode: false, ...JSON.parse(localStorage.getItem("physioSettings") || "{}") }; } catch { return { emailReminders: true, appointmentAlerts: true, progressDigest: false, compactMode: false }; } });
+  const [prefs, setPrefs] = useState(() => {
+    const defaults = {
+      emailReminders: true,
+      appointmentAlerts: true,
+      progressDigest: false,
+      compactMode: false,
+    };
+
+    try {
+      return {
+        ...defaults,
+        ...JSON.parse(
+          localStorage.getItem("physioSettings") || "{}"
+        ),
+      };
+    } catch {
+      return defaults;
+    }
+  });
+
   const [saved, setSaved] = useState(false);
-  function toggle(key) { setPrefs(old => ({ ...old, [key]: !old[key] })); setSaved(false); }
-  function save() { localStorage.setItem("physioSettings", JSON.stringify(prefs)); setSaved(true); }
-  const options = [{ key: "appointmentAlerts", title: "Appointment notifications", description: "Get notified when a session is booked or changed." }, { key: "emailReminders", title: "Email reminders", description: "Receive reminders before your scheduled sessions." }, { key: "progressDigest", title: "Weekly progress digest", description: "A weekly summary of patient progress and pending reviews." }, { key: "compactMode", title: "Compact display", description: "Reduce spacing in lists to fit more information on screen." }];
-  return <div className="physio-page"><PageHeader eyebrow="ACCOUNT / PREFERENCES" title="Settings" description="Make your workspace work the way you do." />
-    <section className="physio-panel-card physio-settings-card"><div className="physio-section-heading"><div><h2>Notifications & preferences</h2><p>These preferences are stored on this device.</p></div><Settings size={20} className="physio-muted-icon" /></div>{options.map(option => <div className="physio-setting-row" key={option.key}><div><strong>{option.title}</strong><p>{option.description}</p></div><button type="button" role="switch" aria-checked={prefs[option.key]} className={`physio-switch-button ${prefs[option.key] ? "on" : ""}`} onClick={() => toggle(option.key)}><span /></button></div>)}<div className="physio-form-footer">{saved && <span className="physio-saved-message"><CircleCheck size={16} /> Preferences saved</span>}<button className="physio-primary-button" onClick={save}><Save size={17} /> Save preferences</button></div></section>
-  </div>;
+
+  function toggle(key) {
+    setPrefs((previous) => ({
+      ...previous,
+      [key]: !previous[key],
+    }));
+
+    setSaved(false);
+  }
+
+  function save() {
+    localStorage.setItem("physioSettings", JSON.stringify(prefs));
+    setSaved(true);
+  }
+
+  const options = [
+    {
+      key: "appointmentAlerts",
+      title: "Appointment notifications",
+      description: "Get notified when a session is booked or changed.",
+    },
+    {
+      key: "emailReminders",
+      title: "Email reminders",
+      description: "Receive reminders before scheduled sessions.",
+    },
+    {
+      key: "progressDigest",
+      title: "Weekly progress digest",
+      description: "A summary of patient progress and pending reviews.",
+    },
+    {
+      key: "compactMode",
+      title: "Compact display",
+      description: "Reduce spacing in lists to fit more information.",
+    },
+  ];
+
+  return (
+    <div className="physio-page">
+      <PageHeader
+        eyebrow="ACCOUNT / PREFERENCES"
+        title="Settings"
+        description="Customize your workspace preferences."
+      />
+
+      <section className="physio-panel-card physio-settings-card">
+        <div className="physio-section-heading">
+          <div>
+            <h2>Notifications &amp; preferences</h2>
+            <p>Preferences saved on this device.</p>
+          </div>
+
+          <Settings size={20} className="physio-muted-icon" />
+        </div>
+
+        {options.map((option) => (
+          <div className="physio-setting-row" key={option.key}>
+            <div>
+              <strong>{option.title}</strong>
+              <p>{option.description}</p>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={prefs[option.key]}
+              className={`physio-switch-button ${
+                prefs[option.key] ? "on" : ""
+              }`}
+              onClick={() => toggle(option.key)}
+            >
+              <span />
+            </button>
+          </div>
+        ))}
+
+        <div className="physio-form-footer">
+          {saved && (
+            <span className="physio-saved-message">
+              <CircleCheck size={16} />
+              Preferences saved
+            </span>
+          )}
+
+          <button className="physio-primary-button" onClick={save}>
+            <Save size={17} />
+            Save preferences
+          </button>
+        </div>
+      </section>
+
+      <p className="physio-demo-disclaimer">
+        These settings are stored in the current browser. A backend
+        settings endpoint is needed for account-wide synchronization.
+      </p>
+    </div>
+  );
 }

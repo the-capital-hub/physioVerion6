@@ -82,7 +82,7 @@ const getDashboardPath = (user) => {
   }
 
   if (["doctor", "physiotherapist"].includes(role)) {
-    return "/doctor/dashboard";
+    return "/doctor";
   }
 
   if (["admin", "administrator"].includes(role)) {
@@ -184,10 +184,10 @@ export default function Auth({ initialMode = "login" }) {
 
   const saveSession = (token, user) => {
     // Clear any previous session before saving this one.
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("user");
+    ["token", "accessToken", "access_token", "authToken", "jwt", "user", "currentUser"].forEach((key) => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
 
     const storage = form.remember ? localStorage : sessionStorage;
 

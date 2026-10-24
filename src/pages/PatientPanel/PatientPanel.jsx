@@ -12,6 +12,7 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import {
   Activity,
@@ -152,6 +153,29 @@ function formatDate(value) {
         minute: "2-digit",
       });
 }
+function formatAppointmentDate(item) {
+  if (!item) return "Date to be confirmed";
+  const dateValue = item.date || item.startTime || item.appointmentDate;
+  if (!dateValue) return "Date to be confirmed";
+
+  // The backend stores appointment date and time in separate fields.
+  const combined =
+    item.date && item.time
+      ? `${String(item.date).slice(0, 10)}T${item.time}:00`
+      : dateValue;
+
+  return formatDate(combined);
+}
+
+function displayAppointmentStatus(status) {
+  const value = String(status || "pending").toLowerCase();
+  if (value === "pending") return "Pending";
+  if (value === "confirmed") return "Confirmed";
+  if (value === "completed") return "Completed";
+  if (value === "cancelled") return "Cancelled";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function greetingName(person) {
   return (
     person?.firstName ||
@@ -174,6 +198,16 @@ export default function PatientPanel() {
   const [apiWarning, setApiWarning] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Clear both persistent and tab-scoped sessions before leaving the portal.
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     localStorage.setItem("rehabics-patient-theme", dark ? "dark" : "light");
@@ -184,36 +218,112 @@ export default function PatientPanel() {
 
   useEffect(() => {
     let active = true;
+
     async function load() {
       setLoading(true);
-      const resources = [
-        "me",
-        "appointments",
-        "exercises",
-        "progress",
-        "therapist",
-      ];
-      const results = await Promise.allSettled(
-        resources.map((key) => getPatientResource(key)),
-      );
-      if (!active) return;
-      const next = { ...demoData };
-      let failed = false;
-      results.forEach((result, index) => {
-        if (result.status === "fulfilled" && result.value != null)
-          next[resources[index]] = result.value;
-        else if (result.status === "rejected") failed = true;
-      });
-      // Demo data is only a visual fallback. Replace endpoint paths in patientApi.js to connect your API.
-      setData(next);
-      setApiWarning(
-        failed
-          ? "Some patient data could not be loaded from the API. Showing sample fallback data for unavailable sections. Check the endpoint paths in patientApi.js."
-          : "",
-      );
-      setLoading(false);
+      setApiWarning("");
+
+      try {
+        const [portalResult, appointmentsResult] = await Promise.allSettled([
+          getPatientResource("portal"),
+          getPatientResource("appointments"),
+        ]);
+
+        if (!active) return;
+
+        if (portalResult.status === "rejected") {
+          throw portalResult.reason;
+        }
+
+        const portal = portalResult.value || {};
+        const appointmentPayload =
+          appointmentsResult.status === "fulfilled"
+            ? appointmentsResult.value
+            : [];
+
+        const appointments = Array.isArray(appointmentPayload)
+          ? appointmentPayload
+          : Array.isArray(appointmentPayload?.appointments)
+            ? appointmentPayload.appointments
+            : Array.isArray(appointmentPayload?.data?.appointments)
+              ? appointmentPayload.data.appointments
+              : [];
+
+        let savedUser = {};
+        try {
+          savedUser = JSON.parse(
+            localStorage.getItem("user") ||
+              sessionStorage.getItem("user") ||
+              "{}"
+          );
+        } catch {
+          savedUser = {};
+        }
+
+        const user = savedUser?.user || savedUser;
+        const profile = {
+          name:
+            user.name ||
+            user.fullName ||
+            [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+            demoData.me.name,
+          email: user.email || demoData.me.email,
+          phone: user.phone || "",
+          condition: user.condition || user.primaryCondition || "",
+          recoveryPercent: undefined,
+        };
+
+        setData((previous) => ({
+          ...previous,
+          me: profile,
+          appointments,
+          settings: portal.settings || {},
+          progressEntries: portal.progressEntries || [],
+          recoveryPlan: portal.recoveryPlan || null,
+          records: portal.records || [],
+          progress: {
+            ...previous.progress,
+            progressEntries: portal.progressEntries || [],
+          },
+        }));
+
+        const missing = [];
+
+if (appointmentsResult.status === "rejected") {
+  missing.push("appointments");
+  console.error(
+    "Patient appointments loading failed:",
+    appointmentsResult.reason?.response?.data ||
+      appointmentsResult.reason?.message
+  );
+}
+
+
+
+setApiWarning(
+  missing.length
+    ? `Patient portal data loaded. Backend data is not yet connected for ${missing.join(" and ")}.`
+    : ""
+);
+      } catch (error) {
+        if (!active) return;
+
+        console.error(
+          "Patient portal loading failed:",
+          error.response?.data || error.message
+        );
+
+        setApiWarning(
+          error.response?.data?.message ||
+            "Unable to load patient data. Please check your login and backend connection."
+        );
+      } finally {
+        if (active) setLoading(false);
+      }
     }
+
     load();
+
     return () => {
       active = false;
     };
@@ -300,10 +410,9 @@ export default function PatientPanel() {
               </div>
               <button
                 className="rp-icon-btn"
-                aria-label="Account options"
-                onClick={() => {
-                  window.location.href = "/patient/profile";
-                }}
+                aria-label="Logout"
+                title="Logout"
+                onClick={handleLogout}
               >
                 <LogOut size={16} />
               </button>
@@ -638,9 +747,9 @@ function AppointmentFeature({ item }) {
       </div>
       <div className="rp-appointment-details">
         <span className="rp-status status-upcoming">
-          {item.status || "Upcoming"}
+          {displayAppointmentStatus(item.status)}
         </span>
-        <h3>{item.type || item.title || "Physiotherapy session"}</h3>
+        <h3>{item.service || item.type || item.title || "Physiotherapy session"}</h3>
         <p>
           {item.therapistName ||
             item.physiotherapist?.name ||
@@ -650,7 +759,7 @@ function AppointmentFeature({ item }) {
         <div className="rp-appointment-meta">
           <span>
             <Clock3 size={14} />{" "}
-            {formatDate(item.date || item.startTime || item.appointmentDate)}
+            {formatAppointmentDate(item)}
           </span>
           <span>
             <MapPin size={14} />{" "}
@@ -666,11 +775,12 @@ function Appointments() {
   const { data, loading } = usePatient();
   const [filter, setFilter] = useState("All");
   const appointments = unwrapList(data.appointments);
-  const filtered = appointments.filter(
-    (a) =>
-      filter === "All" ||
-      String(a.status || "Upcoming").toLowerCase() === filter.toLowerCase(),
-  );
+  const filtered = appointments.filter((appointment) => {
+    const status = String(appointment.status || "pending").toLowerCase();
+    if (filter === "All") return true;
+    if (filter === "Upcoming") return ["pending", "confirmed", "upcoming"].includes(status);
+    return status === filter.toLowerCase();
+  });
   return (
     <>
       <PageHeading
@@ -716,7 +826,7 @@ function Appointments() {
                 </div>
                 <div className="rp-appointment-row-main">
                   <strong>
-                    {item.type || item.title || "Physiotherapy session"}
+                    {item.service || item.type || item.title || "Physiotherapy session"}
                   </strong>
                   <span>
                     {item.therapistName ||
@@ -726,16 +836,14 @@ function Appointments() {
                   </span>
                   <small>
                     <Clock3 size={13} />{" "}
-                    {formatDate(
-                      item.date || item.startTime || item.appointmentDate,
-                    )}{" "}
+                    {formatAppointmentDate(item)}{" "}
                     · {item.mode || item.appointmentType || "Session"}
                   </small>
                 </div>
                 <span
                   className={`rp-status ${String(item.status || "Upcoming").toLowerCase() === "completed" ? "status-completed" : String(item.status || "Upcoming").toLowerCase() === "cancelled" ? "status-cancelled" : "status-upcoming"}`}
                 >
-                  {item.status || "Upcoming"}
+                  {displayAppointmentStatus(item.status)}
                 </span>
               </div>
             ))}
