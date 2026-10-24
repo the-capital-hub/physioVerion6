@@ -22,6 +22,8 @@ function PublicLayout({ children }) {
   return (
     <>
       <Navbar />
+      <ScrollToTop/>
+
       <main>{children}</main>
       <Footer />
       <AIFloatingButton />
